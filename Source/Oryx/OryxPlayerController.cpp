@@ -1,4 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 
 #include "OryxPlayerController.h"
@@ -32,6 +31,7 @@ void AOryxPlayerController::BeginPlay()
 
 	}
 }
+
 
 void AOryxPlayerController::SetupInputComponent()
 {

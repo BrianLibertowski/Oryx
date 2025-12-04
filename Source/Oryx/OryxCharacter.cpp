@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "OryxCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -17,7 +15,7 @@ AOryxCharacter::AOryxCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -27,8 +25,6 @@ AOryxCharacter::AOryxCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
-	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
-	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
@@ -47,54 +43,63 @@ AOryxCharacter::AOryxCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	// Start at full health
+	CurrentHealth = MaxHealth;
 }
 
 void AOryxCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CurrentHealth = MaxHealth;
+	AController* Ctr = GetController();
+
+	UE_LOG(LogTemp, Warning,
+		TEXT("AOryxCharacter::BeginPlay on %s, Controller = %s"),
+		*GetName(),
+		Ctr ? *Ctr->GetName() : TEXT("NONE"));
+
+	if (IsLocallyControlled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OryxCharacter: I am the local player pawn!"));
+	}
 }
 
 void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AOryxCharacter::Move);
-		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AOryxCharacter::Look);
-
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AOryxCharacter::Look);
-	}
-	else
+	if (UEnhancedInputComponent* EnhancedInputComponent =
+		Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		UE_LOG(LogOryx, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		// Jump
+		EnhancedInputComponent->BindAction(JumpAction,
+			ETriggerEvent::Started, this, &AOryxCharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction,
+			ETriggerEvent::Completed, this, &AOryxCharacter::StopJumping);
+
+		// Movement
+		EnhancedInputComponent->BindAction(MoveAction,
+			ETriggerEvent::Triggered, this, &AOryxCharacter::Move);
+
+		// Look
+		EnhancedInputComponent->BindAction(LookAction,
+			ETriggerEvent::Triggered, this, &AOryxCharacter::Look);
+
+		// Fire
+		EnhancedInputComponent->BindAction(FireAction,
+			ETriggerEvent::Started, this, &AOryxCharacter::Fire);
 	}
 }
 
 void AOryxCharacter::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	// route the input
 	DoMove(MovementVector.X, MovementVector.Y);
 }
 
 void AOryxCharacter::Look(const FInputActionValue& Value)
 {
-	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
 }
 
@@ -102,17 +107,12 @@ void AOryxCharacter::DoMove(float Right, float Forward)
 {
 	if (GetController() != nullptr)
 	{
-		// find out which way is forward
 		const FRotator Rotation = GetController()->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
-		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// add movement 
 		AddMovementInput(ForwardDirection, Forward);
 		AddMovementInput(RightDirection, Right);
 	}
@@ -122,7 +122,6 @@ void AOryxCharacter::DoLook(float Yaw, float Pitch)
 {
 	if (GetController() != nullptr)
 	{
-		// add yaw and pitch input to controller
 		AddControllerYawInput(Yaw);
 		AddControllerPitchInput(Pitch);
 	}
@@ -130,22 +129,21 @@ void AOryxCharacter::DoLook(float Yaw, float Pitch)
 
 void AOryxCharacter::DoJumpStart()
 {
-	// signal the character to jump
 	Jump();
 }
 
 void AOryxCharacter::DoJumpEnd()
 {
-	// signal the character to stop jumping
 	StopJumping();
 }
 
 void AOryxCharacter::Fire()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Fire() called"));
+
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	// Spawn transform: from character’s location + a bit forward and up
 	const FVector MuzzleLocation =
 		GetActorLocation() + GetActorForwardVector() * 100.f + FVector(0.f, 0.f, 50.f);
 	const FRotator MuzzleRotation = GetControlRotation();
@@ -154,7 +152,6 @@ void AOryxCharacter::Fire()
 	SpawnParams.Instigator = this;
 	SpawnParams.Owner = this;
 
-	// Spawn a projectile of type AOryxProjectile
 	World->SpawnActor<AOryxProjectile>(MuzzleLocation, MuzzleRotation, SpawnParams);
 }
 
@@ -166,7 +163,9 @@ void AOryxCharacter::ApplyDamage(float DamageAmount)
 	CurrentHealth -= DamageAmount;
 	CurrentHealth = FMath::Max(CurrentHealth, 0.f);
 
-	UE_LOG(LogTemp, Log, TEXT("Oryx took %.1f damage. CurrentHealth = %.1f"), DamageAmount, CurrentHealth);
+	UE_LOG(LogTemp, Log,
+		TEXT("Oryx took %.1f damage. CurrentHealth = %.1f"),
+		DamageAmount, CurrentHealth);
 
 	if (CurrentHealth <= 0.f)
 	{
@@ -178,8 +177,7 @@ void AOryxCharacter::HandleDeath()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Oryx has died!"));
 
-	AController* MyController = GetController();
-	if (MyController)
+	if (AController* MyController = GetController())
 	{
 		MyController->DisableInput(nullptr);
 	}

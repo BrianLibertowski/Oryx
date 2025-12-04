@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -11,7 +9,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
-class AOryxProjectile; //
+class AOryxProjectile;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -25,35 +23,39 @@ class AOryxCharacter : public ACharacter
 	GENERATED_BODY()
 
 	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-	
+
 protected:
 
 	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, Category="Input")
+	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* JumpAction;
 
 	/** Move Input Action */
-	UPROPERTY(EditAnywhere, Category="Input")
+	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* MoveAction;
 
 	/** Look Input Action */
-	UPROPERTY(EditAnywhere, Category="Input")
+	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* LookAction;
 
-	/** Mouse Look Input Action */
-	UPROPERTY(EditAnywhere, Category="Input")
+	/** Mouse Look Input Action (optional) */
+	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* MouseLookAction;
 
+	/** Fire Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* FireAction;
+
+	// --- Stats ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
 	float MaxHealth = 100.f;
 
-	// Current health at runtime
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
 	float CurrentHealth;
 
@@ -71,13 +73,10 @@ public:
 	// --- Combat ---
 	void Fire();
 
-
 protected:
 
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-protected:
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -85,31 +84,27 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-
 public:
 
 	/** Handles move inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
+	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoMove(float Right, float Forward);
 
 	/** Handles look inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
+	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoLook(float Yaw, float Pitch);
 
 	/** Handles jump pressed inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
+	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoJumpStart();
 
-	/** Handles jump pressed inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
+	/** Handles jump released inputs from either controls or UI interfaces */
+	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoJumpEnd();
 
 public:
 
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
 
