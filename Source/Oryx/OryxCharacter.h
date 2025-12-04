@@ -11,6 +11,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
+class AOryxProjectile; //
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -49,10 +50,27 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
-public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
+	float MaxHealth = 100.f;
 
-	/** Constructor */
-	AOryxCharacter();	
+	// Current health at runtime
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
+	float CurrentHealth;
+
+	// Called when health reaches zero
+	void HandleDeath();
+
+public:
+	AOryxCharacter();
+
+	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Stats")
+	void ApplyDamage(float DamageAmount);
+
+	// --- Combat ---
+	void Fire();
+
 
 protected:
 
@@ -66,6 +84,7 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
 
 public:
 

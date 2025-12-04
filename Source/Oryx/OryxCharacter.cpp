@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Oryx.h"
+#include "OryxProjectile.h"
 
 AOryxCharacter::AOryxCharacter()
 {
@@ -48,6 +49,13 @@ AOryxCharacter::AOryxCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void AOryxCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CurrentHealth = MaxHealth;
 }
 
 void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -130,4 +138,49 @@ void AOryxCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+void AOryxCharacter::Fire()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	// Spawn transform: from character’s location + a bit forward and up
+	const FVector MuzzleLocation =
+		GetActorLocation() + GetActorForwardVector() * 100.f + FVector(0.f, 0.f, 50.f);
+	const FRotator MuzzleRotation = GetControlRotation();
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Instigator = this;
+	SpawnParams.Owner = this;
+
+	// Spawn a projectile of type AOryxProjectile
+	World->SpawnActor<AOryxProjectile>(MuzzleLocation, MuzzleRotation, SpawnParams);
+}
+
+void AOryxCharacter::ApplyDamage(float DamageAmount)
+{
+	if (DamageAmount <= 0.f || CurrentHealth <= 0.f)
+		return;
+
+	CurrentHealth -= DamageAmount;
+	CurrentHealth = FMath::Max(CurrentHealth, 0.f);
+
+	UE_LOG(LogTemp, Log, TEXT("Oryx took %.1f damage. CurrentHealth = %.1f"), DamageAmount, CurrentHealth);
+
+	if (CurrentHealth <= 0.f)
+	{
+		HandleDeath();
+	}
+}
+
+void AOryxCharacter::HandleDeath()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Oryx has died!"));
+
+	AController* MyController = GetController();
+	if (MyController)
+	{
+		MyController->DisableInput(nullptr);
+	}
 }
