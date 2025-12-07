@@ -1,14 +1,14 @@
 #include "OryxCharacter.h"
-#include "Engine/LocalPlayer.h"
+
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
+
 #include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Oryx.h"
+
 #include "OryxProjectile.h"
 
 AOryxCharacter::AOryxCharacter()
@@ -21,7 +21,7 @@ AOryxCharacter::AOryxCharacter()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// Configure character movement
+	// Configure character movement (character rotates toward movement direction)
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
@@ -36,12 +36,12 @@ AOryxCharacter::AOryxCharacter()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f;
-	CameraBoom->bUsePawnControlRotation = true;
+	CameraBoom->bUsePawnControlRotation = true; // boom follows controller
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	FollowCamera->bUsePawnControlRotation = false;
+	FollowCamera->bUsePawnControlRotation = false; // camera follows boom
 
 	// Start at full health
 	CurrentHealth = MaxHealth;
@@ -68,39 +68,47 @@ void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (UEnhancedInputComponent* EnhancedInputComponent =
+	if (UEnhancedInputComponent* EnhancedInput =
 		Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
+		// Move
+		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered,
+			this, &AOryxCharacter::Move);
+
+		// Look (mouse + gamepad, both mapped to IA_Look)
+		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered,
+			this, &AOryxCharacter::Look);
+
 		// Jump
-		EnhancedInputComponent->BindAction(JumpAction,
-			ETriggerEvent::Started, this, &AOryxCharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction,
-			ETriggerEvent::Completed, this, &AOryxCharacter::StopJumping);
-
-		// Movement
-		EnhancedInputComponent->BindAction(MoveAction,
-			ETriggerEvent::Triggered, this, &AOryxCharacter::Move);
-
-		// Look
-		EnhancedInputComponent->BindAction(LookAction,
-			ETriggerEvent::Triggered, this, &AOryxCharacter::Look);
+		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Started,
+			this, &AOryxCharacter::DoJumpStart);
+		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Completed,
+			this, &AOryxCharacter::DoJumpEnd);
 
 		// Fire
-		EnhancedInputComponent->BindAction(FireAction,
-			ETriggerEvent::Started, this, &AOryxCharacter::Fire);
+		EnhancedInput->BindAction(FireAction, ETriggerEvent::Started,
+			this, &AOryxCharacter::Fire);
 	}
 }
 
 void AOryxCharacter::Move(const FInputActionValue& Value)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	const FVector2D MovementVector = Value.Get<FVector2D>();
 	DoMove(MovementVector.X, MovementVector.Y);
 }
 
 void AOryxCharacter::Look(const FInputActionValue& Value)
 {
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-	DoLook(LookAxisVector.X, LookAxisVector.Y);
+	const FVector2D LookAxis = Value.Get<FVector2D>();
+
+	const float YawInput = LookAxis.X;
+	const float PitchInput = LookAxis.Y;
+
+	// Horizontal (X): normal
+	AddControllerYawInput(YawInput);
+
+	// Vertical (Y): flip so mouse up = look up
+	AddControllerPitchInput(-PitchInput);
 }
 
 void AOryxCharacter::DoMove(float Right, float Forward)
@@ -158,7 +166,9 @@ void AOryxCharacter::Fire()
 void AOryxCharacter::ApplyDamage(float DamageAmount)
 {
 	if (DamageAmount <= 0.f || CurrentHealth <= 0.f)
+	{
 		return;
+	}
 
 	CurrentHealth -= DamageAmount;
 	CurrentHealth = FMath::Max(CurrentHealth, 0.f);

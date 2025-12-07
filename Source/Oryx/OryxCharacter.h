@@ -33,23 +33,19 @@ class AOryxCharacter : public ACharacter
 protected:
 
 	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* JumpAction;
 
 	/** Move Input Action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* MoveAction;
 
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	/** Look Input Action (used for both mouse and gamepad) */
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* LookAction;
 
-	/** Mouse Look Input Action (optional) */
-	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* MouseLookAction;
-
 	/** Fire Input Action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* FireAction;
 
 	// --- Stats ---
@@ -67,6 +63,7 @@ public:
 
 	virtual void BeginPlay() override;
 
+	// --- Stats / Damage ---
 	UFUNCTION(BlueprintCallable, Category = "Oryx|Stats")
 	void ApplyDamage(float DamageAmount);
 
@@ -78,10 +75,10 @@ protected:
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	/** Called for movement input */
+	/** Called for movement input from Enhanced Input */
 	void Move(const FInputActionValue& Value);
 
-	/** Called for looking input */
+	/** Called for look input from Enhanced Input */
 	void Look(const FInputActionValue& Value);
 
 public:
@@ -107,4 +104,3 @@ public:
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
-
