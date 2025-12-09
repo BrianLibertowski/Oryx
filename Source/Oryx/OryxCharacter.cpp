@@ -27,7 +27,7 @@ AOryxCharacter::AOryxCharacter()
 
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -92,6 +92,16 @@ void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		// Fire
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started,
 			this, &AOryxCharacter::Fire);
+
+		// Sprint
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started,
+			this, &AOryxCharacter::DoSprintStart);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed,
+			this, &AOryxCharacter::DoSprintEnd);
+
+		// Dash
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started,
+			this, &AOryxCharacter::DoDash);
 	}
 	else
 	{
@@ -155,6 +165,53 @@ void AOryxCharacter::DoJumpStart()
 void AOryxCharacter::DoJumpEnd()
 {
 	StopJumping();
+}
+
+void AOryxCharacter::DoSprintStart()
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->MaxWalkSpeed = SprintSpeed;
+	}
+}
+
+void AOryxCharacter::DoSprintEnd()
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->MaxWalkSpeed = WalkSpeed;
+	}
+}
+
+void AOryxCharacter::DoDash()
+{
+	if (!GetCharacterMovement() || !GetWorld())
+	{
+		return;
+	}
+
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	if (CurrentTime - LastDashTime < DashCooldown)
+	{
+		// Still on cooldown
+		return;
+	}
+
+	// Determine dash direction: prefer last movement input, otherwise forward
+	FVector DashDirection = GetLastMovementInputVector();
+	if (DashDirection.IsNearlyZero())
+	{
+		DashDirection = GetActorForwardVector();
+	}
+	DashDirection.Z = 0.f;
+	DashDirection.Normalize();
+
+	const FVector LaunchVelocity = DashDirection * DashStrength;
+
+	// LaunchCharacter: XY dash, keep current vertical movement
+	LaunchCharacter(LaunchVelocity, true, false);
+
+	LastDashTime = CurrentTime;
 }
 
 void AOryxCharacter::Fire()

@@ -32,6 +32,8 @@ class AOryxCharacter : public ACharacter
 
 protected:
 
+	// Input Action
+
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* JumpAction;
@@ -51,6 +53,14 @@ protected:
 	/** Fire Input Action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* FireAction;
+
+	/** Sprint Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* SprintAction;
+
+	/** Dash / Dodge Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* DashAction;
 
 	// --- Stats ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
@@ -102,6 +112,33 @@ public:
 	/** Handles jump released inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoJumpEnd();
+
+	/** Handles sprint pressed inputs */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoSprintStart();
+
+	/** Handles sprint released inputs */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoSprintEnd();
+
+	/** Handles dash / dodge input */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoDash();
+
+	// --- Movement tuning ---
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Movement")
+	float WalkSpeed = 500.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Movement")
+	float SprintSpeed = 800.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Movement")
+	float DashStrength = 1200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Movement")
+	float DashCooldown = 1.0f;
+
+	float LastDashTime = -1000.f;
 
 public:
 
