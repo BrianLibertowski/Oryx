@@ -10,6 +10,7 @@ class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
 class AOryxProjectile;
+class AOryxEnemy;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -69,6 +70,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
 	float CurrentHealth;
 
+	// --- Melee Combat ---
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
+	float MeleeDamage = 25.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
+	float MeleeRange = 200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
+	float MeleeRadius = 75.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
+	float MeleeCooldown = 0.4f;
+
+	float LastMeleeTime = -1000.f;
+
 	// Called when health reaches zero
 	void HandleDeath();
 
@@ -82,7 +98,7 @@ public:
 	void ApplyDamage(float DamageAmount);
 
 	// --- Combat ---
-	void Fire();
+	void MeleeAttack();
 
 protected:
 

@@ -11,6 +11,8 @@
 
 #include "OryxProjectile.h"
 
+#include "OryxEnemy.h"
+
 AOryxCharacter::AOryxCharacter()
 {
 	// Set size for collision capsule
@@ -89,9 +91,9 @@ void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered,
 			this, &AOryxCharacter::Look);
 
-		// Fire
+		// Fire / Attack
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started,
-			this, &AOryxCharacter::Fire);
+			this, &AOryxCharacter::MeleeAttack);
 
 		// Sprint
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started,
@@ -102,6 +104,7 @@ void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		// Dash
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started,
 			this, &AOryxCharacter::DoDash);
+
 	}
 	else
 	{
@@ -214,22 +217,64 @@ void AOryxCharacter::DoDash()
 	LastDashTime = CurrentTime;
 }
 
-void AOryxCharacter::Fire()
+void AOryxCharacter::MeleeAttack()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Fire() called"));
-
 	UWorld* World = GetWorld();
-	if (!World) return;
+	if (!World)
+	{
+		return;
+	}
 
-	const FVector MuzzleLocation =
-		GetActorLocation() + GetActorForwardVector() * 100.f + FVector(0.f, 0.f, 50.f);
-	const FRotator MuzzleRotation = GetControlRotation();
+	const float CurrentTime = World->GetTimeSeconds();
+	if (CurrentTime - LastMeleeTime < MeleeCooldown)
+	{
+		return; // still on cooldown
+	}
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Instigator = this;
-	SpawnParams.Owner = this;
+	LastMeleeTime = CurrentTime;
 
-	World->SpawnActor<AOryxProjectile>(MuzzleLocation, MuzzleRotation, SpawnParams);
+	const FVector Start = GetActorLocation();
+	const FVector Forward = GetActorForwardVector();
+	const FVector End = Start + Forward * MeleeRange;
+
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(MeleeRadius);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	TArray<FHitResult> HitResults;
+
+	const bool bHit = World->SweepMultiByChannel(
+		HitResults,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Pawn,   // enemies as Characters will be on Pawn channel
+		Sphere,
+		QueryParams
+	);
+
+	if (bHit)
+	{
+		for (const FHitResult& Hit : HitResults)
+		{
+			AActor* HitActor = Hit.GetActor();
+			if (!HitActor || HitActor == this)
+			{
+				continue;
+			}
+
+			UE_LOG(LogTemp, Log, TEXT("Melee hit: %s"), *HitActor->GetName());
+
+			// If it's an enemy, apply damage
+			if (AOryxEnemy* Enemy = Cast<AOryxEnemy>(HitActor))
+			{
+				Enemy->ApplyDamage(MeleeDamage);
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack performed"));
 }
 
 void AOryxCharacter::ApplyDamage(float DamageAmount)
