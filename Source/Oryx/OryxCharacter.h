@@ -70,6 +70,20 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
 	float CurrentHealth;
 
+	// Stamina
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
+	float MaxStamina = 100.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
+	float CurrentStamina = 100.f;
+
+	// Mana
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
+	float MaxMana = 100.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
+	float CurrentMana = 100.f;
+
 	// --- Melee Combat ---
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
 	float MeleeDamage = 25.f;
