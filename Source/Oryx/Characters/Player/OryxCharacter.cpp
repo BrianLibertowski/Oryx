@@ -9,9 +9,9 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 
-#include "OryxProjectile.h"
+#include "Projectiles/Base/OryxProjectile.h"
 
-#include "OryxEnemy.h"
+#include "Characters/Enemies/Base/OryxEnemy.h"
 
 AOryxCharacter::AOryxCharacter()
 {
