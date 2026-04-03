@@ -12,6 +12,7 @@
 #include "Projectiles/Base/OryxProjectile.h"
 
 #include "Characters/Enemies/Base/OryxEnemy.h"
+#include "Component/Health/OryxHealthComponent.h"
 
 AOryxCharacter::AOryxCharacter()
 {
@@ -269,7 +270,10 @@ void AOryxCharacter::MeleeAttack()
 			// If it's an enemy, apply damage
 			if (AOryxEnemy* Enemy = Cast<AOryxEnemy>(HitActor))
 			{
-				Enemy->ApplyDamage(MeleeDamage);
+				if (UOryxHealthComponent* EnemyHealth = Enemy->FindComponentByClass<UOryxHealthComponent>())
+				{
+					EnemyHealth->ApplyDamage(MeleeDamage);
+				}
 			}
 		}
 	}
