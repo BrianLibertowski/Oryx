@@ -13,6 +13,7 @@
 
 #include "Characters/Enemies/Base/OryxEnemy.h"
 #include "Component/Health/OryxHealthComponent.h"
+#include "Component/Ability/OryxAbilityComponent.h"
 
 AOryxCharacter::AOryxCharacter()
 {
@@ -46,8 +47,8 @@ AOryxCharacter::AOryxCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false; // camera follows boom, not controller directly
 
-	// Start at full health
-	CurrentHealth = MaxHealth;
+	AbilityComponent = CreateDefaultSubobject<UOryxAbilityComponent>(TEXT("AbilityComponent"));
+	HealthComponent = CreateDefaultSubobject<UOryxHealthComponent>(TEXT("HealthComponent"));
 }
 
 void AOryxCharacter::BeginPlay()
@@ -64,6 +65,11 @@ void AOryxCharacter::BeginPlay()
 	if (IsLocallyControlled())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OryxCharacter: I am the local player pawn!"));
+	}
+
+	if (HealthComponent)
+	{
+		HealthComponent->OnDeath.AddDynamic(this, &AOryxCharacter::HandleDeath);
 	}
 }
 
@@ -281,32 +287,17 @@ void AOryxCharacter::MeleeAttack()
 	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack performed"));
 }
 
-void AOryxCharacter::ApplyDamage(float DamageAmount)
-{
-	if (DamageAmount <= 0.f || CurrentHealth <= 0.f)
-	{
-		return;
-	}
-
-	CurrentHealth -= DamageAmount;
-	CurrentHealth = FMath::Max(CurrentHealth, 0.f);
-
-	UE_LOG(LogTemp, Log,
-		TEXT("Oryx took %.1f damage. CurrentHealth = %.1f"),
-		DamageAmount, CurrentHealth);
-
-	if (CurrentHealth <= 0.f)
-	{
-		HandleDeath();
-	}
-}
-
-void AOryxCharacter::HandleDeath()
+void AOryxCharacter::HandleDeath(AActor* DeadActor)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Oryx has died!"));
 
 	if (AController* MyController = GetController())
 	{
 		MyController->DisableInput(nullptr);
+	}
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->DisableMovement();
 	}
 }

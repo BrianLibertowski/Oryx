@@ -11,6 +11,8 @@ class UInputAction;
 struct FInputActionValue;
 class AOryxProjectile;
 class AOryxEnemy;
+class UOryxAbilityComponent;
+class UOryxHealthComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -30,6 +32,14 @@ class AOryxCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	/** Manages this character's abilities and their cooldowns */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxAbilityComponent* AbilityComponent;
+
+	/** Holds this character's health state */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxHealthComponent* HealthComponent;
 
 protected:
 
@@ -63,13 +73,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* DashAction;
 
-	// --- Stats ---
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
-	float MaxHealth = 100.f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
-	float CurrentHealth;
-
 	// Stamina
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
 	float MaxStamina = 100.f;
@@ -99,17 +102,14 @@ protected:
 
 	float LastMeleeTime = -1000.f;
 
-	// Called when health reaches zero
-	void HandleDeath();
+	// Bound to HealthComponent->OnDeath in BeginPlay
+	UFUNCTION()
+	void HandleDeath(AActor* DeadActor);
 
 public:
 	AOryxCharacter();
 
 	virtual void BeginPlay() override;
-
-	// --- Stats / Damage ---
-	UFUNCTION(BlueprintCallable, Category = "Oryx|Stats")
-	void ApplyDamage(float DamageAmount);
 
 	// --- Combat ---
 	void MeleeAttack();
@@ -177,4 +177,10 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	/** Returns AbilityComponent subobject **/
+	FORCEINLINE UOryxAbilityComponent* GetAbilityComponent() const { return AbilityComponent; }
+
+	/** Returns HealthComponent subobject **/
+	FORCEINLINE UOryxHealthComponent* GetHealthComponent() const { return HealthComponent; }
 };
