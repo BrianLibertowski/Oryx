@@ -10,7 +10,6 @@ class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
 class AOryxProjectile;
-class AOryxEnemy;
 class UOryxAbilityComponent;
 class UOryxHealthComponent;
 
@@ -87,21 +86,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
 	float CurrentMana = 100.f;
 
-	// --- Melee Combat ---
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
-	float MeleeDamage = 25.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
-	float MeleeRange = 200.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
-	float MeleeRadius = 75.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
-	float MeleeCooldown = 0.4f;
-
-	float LastMeleeTime = -1000.f;
-
 	// Bound to HealthComponent->OnDeath in BeginPlay
 	UFUNCTION()
 	void HandleDeath(AActor* DeadActor);
@@ -110,9 +94,6 @@ public:
 	AOryxCharacter();
 
 	virtual void BeginPlay() override;
-
-	// --- Combat ---
-	void MeleeAttack();
 
 protected:
 

@@ -11,7 +11,6 @@
 
 #include "Projectiles/Base/OryxProjectile.h"
 
-#include "Characters/Enemies/Base/OryxEnemy.h"
 #include "Component/Health/OryxHealthComponent.h"
 #include "Component/Ability/OryxAbilityComponent.h"
 
@@ -97,10 +96,6 @@ void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		// Gamepad look (e.g. IA_Look in IMC_Default)
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered,
 			this, &AOryxCharacter::Look);
-
-		// Fire / Attack
-		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started,
-			this, &AOryxCharacter::MeleeAttack);
 
 		// Sprint
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started,
@@ -222,69 +217,6 @@ void AOryxCharacter::DoDash()
 	LaunchCharacter(LaunchVelocity, true, false);
 
 	LastDashTime = CurrentTime;
-}
-
-void AOryxCharacter::MeleeAttack()
-{
-	UWorld* World = GetWorld();
-	if (!World)
-	{
-		return;
-	}
-
-	const float CurrentTime = World->GetTimeSeconds();
-	if (CurrentTime - LastMeleeTime < MeleeCooldown)
-	{
-		return; // still on cooldown
-	}
-
-	LastMeleeTime = CurrentTime;
-
-	const FVector Start = GetActorLocation();
-	const FVector Forward = GetActorForwardVector();
-	const FVector End = Start + Forward * MeleeRange;
-
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(MeleeRadius);
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-
-	TArray<FHitResult> HitResults;
-
-	const bool bHit = World->SweepMultiByChannel(
-		HitResults,
-		Start,
-		End,
-		FQuat::Identity,
-		ECC_Pawn,   // enemies as Characters will be on Pawn channel
-		Sphere,
-		QueryParams
-	);
-
-	if (bHit)
-	{
-		for (const FHitResult& Hit : HitResults)
-		{
-			AActor* HitActor = Hit.GetActor();
-			if (!HitActor || HitActor == this)
-			{
-				continue;
-			}
-
-			UE_LOG(LogTemp, Log, TEXT("Melee hit: %s"), *HitActor->GetName());
-
-			// If it's an enemy, apply damage
-			if (AOryxEnemy* Enemy = Cast<AOryxEnemy>(HitActor))
-			{
-				if (UOryxHealthComponent* EnemyHealth = Enemy->FindComponentByClass<UOryxHealthComponent>())
-				{
-					EnemyHealth->ApplyDamage(MeleeDamage);
-				}
-			}
-		}
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack performed"));
 }
 
 void AOryxCharacter::HandleDeath(AActor* DeadActor)
