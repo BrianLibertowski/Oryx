@@ -12,6 +12,7 @@ struct FInputActionValue;
 class AOryxProjectile;
 class UOryxAbilityComponent;
 class UOryxHealthComponent;
+class UUserWidget;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -85,6 +86,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Stats")
 	float CurrentMana = 100.f;
+
+	// Widget class to show on death — set in BP_OryxCharacter
+	UPROPERTY(EditDefaultsOnly, Category = "Oryx|UI")
+	TSubclassOf<UUserWidget> GameOverWidgetClass;
 
 	// Bound to HealthComponent->OnDeath in BeginPlay
 	UFUNCTION()

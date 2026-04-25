@@ -14,6 +14,9 @@
 #include "Component/Health/OryxHealthComponent.h"
 #include "Component/Ability/OryxAbilityComponent.h"
 
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/PlayerController.h"
+
 AOryxCharacter::AOryxCharacter()
 {
 	// Set size for collision capsule
@@ -223,13 +226,26 @@ void AOryxCharacter::HandleDeath(AActor* DeadActor)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Oryx has died!"));
 
-	if (AController* MyController = GetController())
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	if (PC)
 	{
-		MyController->DisableInput(nullptr);
+		PC->DisableInput(nullptr);
 	}
 
 	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
 	{
 		MoveComp->DisableMovement();
+	}
+
+	if (GameOverWidgetClass && PC)
+	{
+		UUserWidget* GameOverWidget = CreateWidget<UUserWidget>(PC, GameOverWidgetClass);
+		if (GameOverWidget)
+		{
+			GameOverWidget->AddToViewport();
+			PC->SetShowMouseCursor(true);
+			PC->SetInputMode(FInputModeUIOnly());
+		}
 	}
 }
