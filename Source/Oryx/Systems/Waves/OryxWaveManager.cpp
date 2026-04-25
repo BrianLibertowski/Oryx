@@ -2,6 +2,7 @@
 #include "Characters/Enemies/Base/OryxEnemy.h"
 #include "Component/Health/OryxHealthComponent.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 AOryxWaveManager::AOryxWaveManager()
 {
@@ -12,10 +13,29 @@ void AOryxWaveManager::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Register any enemies already placed in the level so they count toward wave completion
+	TArray<AActor*> PlacedEnemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AOryxEnemy::StaticClass(), PlacedEnemies);
+	for (AActor* Actor : PlacedEnemies)
+	{
+		RegisterEnemy(Cast<AOryxEnemy>(Actor));
+	}
+
 	if (bAutoStartFirstWave)
 	{
 		StartNextWave();
 	}
+}
+
+void AOryxWaveManager::RegisterEnemy(AOryxEnemy* Enemy)
+{
+	if (!Enemy) return;
+
+	UOryxHealthComponent* HealthComp = Enemy->FindComponentByClass<UOryxHealthComponent>();
+	if (!HealthComp) return;
+
+	HealthComp->OnDeath.AddDynamic(this, &AOryxWaveManager::HandleEnemyDeath);
+	EnemiesAlive++;
 }
 
 void AOryxWaveManager::StartNextWave()
@@ -28,7 +48,6 @@ void AOryxWaveManager::StartNextWave()
 
 	CurrentWave++;
 	const int32 EnemiesToSpawn = BaseEnemiesPerWave + (CurrentWave - 1);
-	EnemiesAlive = 0;
 
 	OnWaveStarted.Broadcast(CurrentWave);
 
@@ -47,15 +66,7 @@ void AOryxWaveManager::StartNextWave()
 		FTransform SpawnTransform = SpawnPoint->GetActorTransform();
 		AOryxEnemy* Enemy = World->SpawnActor<AOryxEnemy>(EnemyClass, SpawnTransform, SpawnParams);
 
-		if (Enemy)
-		{
-			UOryxHealthComponent* HealthComp = Enemy->FindComponentByClass<UOryxHealthComponent>();
-			if (HealthComp)
-			{
-				HealthComp->OnDeath.AddDynamic(this, &AOryxWaveManager::HandleEnemyDeath);
-				EnemiesAlive++;
-			}
-		}
+		RegisterEnemy(Enemy);
 	}
 }
 

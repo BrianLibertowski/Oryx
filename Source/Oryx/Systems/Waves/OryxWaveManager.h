@@ -56,6 +56,8 @@ private:
 	int32 CurrentWave = 0;
 	int32 EnemiesAlive = 0;
 
+	void RegisterEnemy(AOryxEnemy* Enemy);
+
 	UFUNCTION()
 	void HandleEnemyDeath(AActor* DeadActor);
 };
