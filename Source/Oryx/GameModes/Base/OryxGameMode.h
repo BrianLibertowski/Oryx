@@ -15,9 +15,12 @@ class AOryxGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	
+
 	/** Constructor */
 	AOryxGameMode();
+
+	/** Returns class selected on UOryxGameInstance, falls back to DefaultPawnClass */
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 };
 
 
