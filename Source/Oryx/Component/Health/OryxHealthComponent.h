@@ -32,6 +32,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Oryx|Health")
 	void ApplyHealing(float HealAmount);
 
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Health")
+	void IncreaseMaxHealth(float Amount);
+
 	UFUNCTION(BlueprintPure, Category = "Oryx|Health")
 	float GetCurrentHealth() const { return CurrentHealth; }
 

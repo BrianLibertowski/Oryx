@@ -42,3 +42,13 @@ void UOryxHealthComponent::ApplyHealing(float HealAmount)
 
 	OnDamaged.Broadcast(CurrentHealth, -HealAmount);
 }
+
+void UOryxHealthComponent::IncreaseMaxHealth(float Amount)
+{
+	if (Amount <= 0.f || bIsDead) return;
+
+	MaxHealth += Amount;
+	CurrentHealth = MaxHealth;
+
+	OnDamaged.Broadcast(CurrentHealth, -Amount);
+}
