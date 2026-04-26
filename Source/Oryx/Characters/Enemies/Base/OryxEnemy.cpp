@@ -1,6 +1,7 @@
 #include "OryxEnemy.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Component/Health/OryxHealthComponent.h"
+#include "Actors/Pickups/OryxPickup_Gold.h"
 
 AOryxEnemy::AOryxEnemy()
 {
@@ -41,6 +42,20 @@ void AOryxEnemy::HandleDeath(AActor* DeadActor)
         MoveComp->DisableMovement();
     }
 
-    // Later: play death anim, notify wave manager, drop loot
+    if (GoldPickupClass && GoldDropCount > 0)
+    {
+        const FVector SpawnBase = GetActorLocation();
+        FActorSpawnParameters Params;
+        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+        for (int32 i = 0; i < GoldDropCount; ++i)
+        {
+            const FVector Offset = FVector(FMath::FRandRange(-40.f, 40.f), FMath::FRandRange(-40.f, 40.f), 0.f);
+            if (AOryxPickup_Gold* Pickup = GetWorld()->SpawnActor<AOryxPickup_Gold>(GoldPickupClass, SpawnBase + Offset, FRotator::ZeroRotator, Params))
+            {
+                Pickup->Value = GoldDropValue;
+            }
+        }
+    }
+
     Destroy();
 }

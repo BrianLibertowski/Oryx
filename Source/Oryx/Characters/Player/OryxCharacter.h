@@ -12,6 +12,7 @@ struct FInputActionValue;
 class AOryxProjectile;
 class UOryxAbilityComponent;
 class UOryxHealthComponent;
+class UOryxCurrencyComponent;
 class UUserWidget;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -40,6 +41,10 @@ class AOryxCharacter : public ACharacter
 	/** Holds this character's health state */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UOryxHealthComponent* HealthComponent;
+
+	/** Holds this character's in-run currency (gold + onyx) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxCurrencyComponent* CurrencyComponent;
 
 protected:
 
@@ -169,4 +174,7 @@ public:
 
 	/** Returns HealthComponent subobject **/
 	FORCEINLINE UOryxHealthComponent* GetHealthComponent() const { return HealthComponent; }
+
+	/** Returns CurrencyComponent subobject **/
+	FORCEINLINE UOryxCurrencyComponent* GetCurrencyComponent() const { return CurrencyComponent; }
 };

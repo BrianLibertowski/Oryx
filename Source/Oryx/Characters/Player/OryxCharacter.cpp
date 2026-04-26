@@ -13,6 +13,7 @@
 
 #include "Component/Health/OryxHealthComponent.h"
 #include "Component/Ability/OryxAbilityComponent.h"
+#include "Component/Currency/OryxCurrencyComponent.h"
 
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
@@ -51,6 +52,7 @@ AOryxCharacter::AOryxCharacter()
 
 	AbilityComponent = CreateDefaultSubobject<UOryxAbilityComponent>(TEXT("AbilityComponent"));
 	HealthComponent = CreateDefaultSubobject<UOryxHealthComponent>(TEXT("HealthComponent"));
+	CurrencyComponent = CreateDefaultSubobject<UOryxCurrencyComponent>(TEXT("CurrencyComponent"));
 }
 
 void AOryxCharacter::BeginPlay()
