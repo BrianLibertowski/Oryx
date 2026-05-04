@@ -47,6 +47,8 @@ void AOryxEncounter::StartEncounter(AOryxCharacter* InstigatingPlayer)
 		AOryxEnemy* Spawned = World->SpawnActor<AOryxEnemy>(EnemyClass, SpawnLoc, SpawnRot, Params);
 		if (!Spawned) continue;
 
+		SpawnedEnemies.Add(Spawned);
+
 		// Bind OnDeath so we count down as they die
 		if (UOryxHealthComponent* HC = Spawned->FindComponentByClass<UOryxHealthComponent>())
 		{
@@ -64,6 +66,21 @@ void AOryxEncounter::StartEncounter(AOryxCharacter* InstigatingPlayer)
 	{
 		// Nothing to track — complete immediately so we don't softlock
 		CompleteEncounter();
+	}
+}
+
+void AOryxEncounter::BroadcastAlert(AActor* Target)
+{
+	if (!IsValid(Target)) return;
+
+	for (AOryxEnemy* Enemy : SpawnedEnemies)
+	{
+		if (!IsValid(Enemy)) continue;
+		if (UOryxHealthComponent* HC = Enemy->FindComponentByClass<UOryxHealthComponent>())
+		{
+			if (HC->IsDead()) continue;
+		}
+		Enemy->MarkAlerted(Target);
 	}
 }
 

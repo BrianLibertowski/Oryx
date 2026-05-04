@@ -5,6 +5,7 @@
 #include "EngineUtils.h"
 
 #include "Characters/Player/OryxCharacter.h"
+#include "Characters/Enemies/Base/OryxEnemy.h"
 #include "Component/Health/OryxHealthComponent.h"
 
 UBTT_FindNearestPlayer::UBTT_FindNearestPlayer()
@@ -28,6 +29,37 @@ EBTNodeResult::Type UBTT_FindNearestPlayer::ExecuteTask(UBehaviorTreeComponent& 
 
 	UWorld* World = SelfPawn->GetWorld();
 	if (!World) return EBTNodeResult::Failed;
+
+	AOryxEnemy* SelfEnemy = Cast<AOryxEnemy>(SelfPawn);
+
+	// Leash: past range → drop aggro, fail. Selector falls to ReturnToSpawn branch.
+	if (SelfEnemy && SelfEnemy->IsBeyondLeash())
+	{
+		SelfEnemy->ClearAggro();
+		BB->ClearValue(TargetActorKey.SelectedKeyName);
+		return EBTNodeResult::Failed;
+	}
+
+	// Forced aggro (from damage spread or camp proximity) bypasses normal range search
+	if (SelfEnemy && SelfEnemy->IsForcedAggro())
+	{
+		AActor* Forced = SelfEnemy->GetForcedTarget();
+		if (IsValid(Forced))
+		{
+			// Still respect death — if the forced target is dead, fall through to range search
+			if (AOryxCharacter* AsCharacter = Cast<AOryxCharacter>(Forced))
+			{
+				if (UOryxHealthComponent* HC = AsCharacter->GetHealthComponent())
+				{
+					if (!HC->IsDead())
+					{
+						BB->SetValueAsObject(TargetActorKey.SelectedKeyName, Forced);
+						return EBTNodeResult::Succeeded;
+					}
+				}
+			}
+		}
+	}
 
 	const FVector SelfLoc = SelfPawn->GetActorLocation();
 
@@ -55,7 +87,11 @@ EBTNodeResult::Type UBTT_FindNearestPlayer::ExecuteTask(UBehaviorTreeComponent& 
 		}
 	}
 
-	if (!Best) return EBTNodeResult::Failed;
+	if (!Best)
+	{
+		BB->ClearValue(TargetActorKey.SelectedKeyName);
+		return EBTNodeResult::Failed;
+	}
 
 	BB->SetValueAsObject(TargetActorKey.SelectedKeyName, Best);
 	return EBTNodeResult::Succeeded;

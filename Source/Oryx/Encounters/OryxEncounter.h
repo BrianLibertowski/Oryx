@@ -79,9 +79,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Oryx|Encounter|State")
 	int32 RemainingEnemies = 0;
 
+	/** All enemies spawned by this encounter (alive or dead). Used for shared-aggro broadcasts. */
+	UPROPERTY(VisibleAnywhere, Category = "Oryx|Encounter|State")
+	TArray<AOryxEnemy*> SpawnedEnemies;
+
 	/** Subclasses call this to begin the encounter. Idempotent — does nothing if already active or cleared. */
 	UFUNCTION(BlueprintCallable, Category = "Oryx|Encounter")
 	void StartEncounter(AOryxCharacter* InstigatingPlayer);
+
+	/** Force-aggros every alive enemy spawned by this encounter onto the given target. */
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Encounter")
+	void BroadcastAlert(AActor* Target);
 
 	/** Bound to each spawned enemy's OnDeath */
 	UFUNCTION()

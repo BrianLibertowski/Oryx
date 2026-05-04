@@ -2,6 +2,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Component/Health/OryxHealthComponent.h"
 #include "Actors/Pickups/OryxPickup_Gold.h"
+#include "EngineUtils.h"
 
 AOryxEnemy::AOryxEnemy()
 {
@@ -19,9 +20,69 @@ void AOryxEnemy::BeginPlay()
 {
     Super::BeginPlay();
 
+    SpawnLocation = GetActorLocation();
+
     if (HealthComponent)
     {
         HealthComponent->OnDeath.AddDynamic(this, &AOryxEnemy::HandleDeath);
+        HealthComponent->OnDamaged.AddDynamic(this, &AOryxEnemy::HandleDamaged);
+    }
+}
+
+bool AOryxEnemy::IsBeyondLeash() const
+{
+    if (LeashRange <= 0.f) return false;
+    return FVector::DistSquared(GetActorLocation(), SpawnLocation) > (LeashRange * LeashRange);
+}
+
+void AOryxEnemy::MarkAlerted(AActor* InTarget)
+{
+    if (!IsValid(InTarget)) return;
+    bForcedAggro = true;
+    ForcedTarget = InTarget;
+}
+
+void AOryxEnemy::ClearAggro()
+{
+    bForcedAggro = false;
+    ForcedTarget = nullptr;
+}
+
+void AOryxEnemy::HandleDamaged(float /*NewHealth*/, float /*DamageAmount*/)
+{
+    // We don't know who hit us from the delegate signature — alert toward nearest player.
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    // Self alerts immediately
+    AActor* NearestPlayer = nullptr;
+    float NearestDistSq = TNumericLimits<float>::Max();
+    for (TActorIterator<APawn> It(World); It; ++It)
+    {
+        APawn* P = *It;
+        if (!IsValid(P) || !P->IsPlayerControlled()) continue;
+        const float DistSq = FVector::DistSquared(P->GetActorLocation(), GetActorLocation());
+        if (DistSq < NearestDistSq)
+        {
+            NearestDistSq = DistSq;
+            NearestPlayer = P;
+        }
+    }
+    if (!NearestPlayer) return;
+
+    MarkAlerted(NearestPlayer);
+
+    // Spread aggro to nearby allies
+    if (AlertRadius <= 0.f) return;
+    const float AlertRadiusSq = AlertRadius * AlertRadius;
+    for (TActorIterator<AOryxEnemy> It(World); It; ++It)
+    {
+        AOryxEnemy* Ally = *It;
+        if (!IsValid(Ally) || Ally == this) continue;
+        if (FVector::DistSquared(Ally->GetActorLocation(), GetActorLocation()) <= AlertRadiusSq)
+        {
+            Ally->MarkAlerted(NearestPlayer);
+        }
     }
 }
 
