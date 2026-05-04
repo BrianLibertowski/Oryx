@@ -14,6 +14,7 @@
 #include "Component/Health/OryxHealthComponent.h"
 #include "Component/Ability/OryxAbilityComponent.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
+#include "States/Player/OryxPlayerState.h"
 
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
@@ -52,7 +53,16 @@ AOryxCharacter::AOryxCharacter()
 
 	AbilityComponent = CreateDefaultSubobject<UOryxAbilityComponent>(TEXT("AbilityComponent"));
 	HealthComponent = CreateDefaultSubobject<UOryxHealthComponent>(TEXT("HealthComponent"));
-	CurrencyComponent = CreateDefaultSubobject<UOryxCurrencyComponent>(TEXT("CurrencyComponent"));
+	// Currency lives on AOryxPlayerState (co-op proof: persists across pawn destruction)
+}
+
+UOryxCurrencyComponent* AOryxCharacter::GetCurrencyComponent() const
+{
+	if (AOryxPlayerState* PS = GetPlayerState<AOryxPlayerState>())
+	{
+		return PS->GetCurrencyComponent();
+	}
+	return nullptr;
 }
 
 void AOryxCharacter::BeginPlay()

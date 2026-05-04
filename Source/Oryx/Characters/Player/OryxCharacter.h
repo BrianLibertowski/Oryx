@@ -42,10 +42,6 @@ class AOryxCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UOryxHealthComponent* HealthComponent;
 
-	/** Holds this character's in-run currency (gold + onyx) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UOryxCurrencyComponent* CurrencyComponent;
-
 protected:
 
 	// Input Action
@@ -175,6 +171,7 @@ public:
 	/** Returns HealthComponent subobject **/
 	FORCEINLINE UOryxHealthComponent* GetHealthComponent() const { return HealthComponent; }
 
-	/** Returns CurrencyComponent subobject **/
-	FORCEINLINE UOryxCurrencyComponent* GetCurrencyComponent() const { return CurrencyComponent; }
+	/** Returns this character's currency component (lives on PlayerState — survives pawn death) */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Currency")
+	UOryxCurrencyComponent* GetCurrencyComponent() const;
 };

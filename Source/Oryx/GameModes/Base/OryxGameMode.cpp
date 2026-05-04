@@ -2,10 +2,12 @@
 
 #include "OryxGameMode.h"
 #include "OryxGameInstance.h"
+#include "States/Player/OryxPlayerState.h"
 
 AOryxGameMode::AOryxGameMode()
 {
-	// stub
+	// Co-op proof: player-persistent state (currency, etc.) lives on PlayerState
+	PlayerStateClass = AOryxPlayerState::StaticClass();
 }
 
 UClass* AOryxGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)

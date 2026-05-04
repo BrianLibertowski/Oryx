@@ -3,7 +3,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Characters/Player/OryxCharacter.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
-#include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
 
 AOryxPickup_Gold::AOryxPickup_Gold()
 {
@@ -24,16 +24,25 @@ void AOryxPickup_Gold::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0);
-	if (!Player) return;
-
-	const FVector ToPlayer = Player->GetActorLocation() - GetActorLocation();
-	const float Dist = ToPlayer.Size();
-	if (Dist <= MagnetRadius)
+	// Co-op proof: magnet to NEAREST player, not player index 0.
+	AOryxCharacter* Nearest = nullptr;
+	float NearestDistSq = MagnetRadius * MagnetRadius;
+	for (TActorIterator<AOryxCharacter> It(GetWorld()); It; ++It)
 	{
-		const FVector Dir = ToPlayer.GetSafeNormal();
-		SetActorLocation(GetActorLocation() + Dir * MagnetSpeed * DeltaSeconds);
+		AOryxCharacter* Candidate = *It;
+		if (!IsValid(Candidate)) continue;
+
+		const float DistSq = FVector::DistSquared(Candidate->GetActorLocation(), GetActorLocation());
+		if (DistSq <= NearestDistSq)
+		{
+			NearestDistSq = DistSq;
+			Nearest = Candidate;
+		}
 	}
+	if (!Nearest) return;
+
+	const FVector Dir = (Nearest->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	SetActorLocation(GetActorLocation() + Dir * MagnetSpeed * DeltaSeconds);
 }
 
 void AOryxPickup_Gold::OnSphereOverlap(UPrimitiveComponent*, AActor* OtherActor,
@@ -42,10 +51,11 @@ void AOryxPickup_Gold::OnSphereOverlap(UPrimitiveComponent*, AActor* OtherActor,
 	AOryxCharacter* Player = Cast<AOryxCharacter>(OtherActor);
 	if (!Player) return;
 
+	// Routes through PlayerState — survives pawn death, replicates per-player in co-op.
 	if (UOryxCurrencyComponent* Currency = Player->GetCurrencyComponent())
 	{
 		Currency->AddGold(Value);
+		Destroy();
 	}
-
-	Destroy();
+	// If currency is null (e.g. PlayerState not yet replicated), don't destroy — let next overlap retry.
 }
