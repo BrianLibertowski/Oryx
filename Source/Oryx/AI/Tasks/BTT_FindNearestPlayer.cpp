@@ -32,7 +32,9 @@ EBTNodeResult::Type UBTT_FindNearestPlayer::ExecuteTask(UBehaviorTreeComponent& 
 	const FVector SelfLoc = SelfPawn->GetActorLocation();
 
 	AOryxCharacter* Best = nullptr;
-	float BestDistSq = TNumericLimits<float>::Max();
+	// Cap search to MaxAggroRange (squared) — outside this, nothing is a valid target.
+	// MaxAggroRange == 0 means unlimited.
+	float BestDistSq = (MaxAggroRange > 0.f) ? (MaxAggroRange * MaxAggroRange) : TNumericLimits<float>::Max();
 
 	for (TActorIterator<AOryxCharacter> It(World); It; ++It)
 	{

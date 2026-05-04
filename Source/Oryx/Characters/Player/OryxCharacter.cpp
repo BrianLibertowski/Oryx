@@ -19,6 +19,9 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 
+#include "Interfaces/OryxInteractable.h"
+#include "DrawDebugHelpers.h"
+
 AOryxCharacter::AOryxCharacter()
 {
 	// Set size for collision capsule
@@ -63,6 +66,38 @@ UOryxCurrencyComponent* AOryxCharacter::GetCurrencyComponent() const
 		return PS->GetCurrencyComponent();
 	}
 	return nullptr;
+}
+
+// --- Reward request layer ---
+// Wrappers stay single-line in single-player. When co-op lands, mark these as
+// Server, Reliable RPCs and add HasAuthority gates — call sites don't change.
+
+void AOryxCharacter::RequestApplyVitality()
+{
+	if (HealthComponent)
+	{
+		HealthComponent->IncreaseMaxHealth(VitalityBoost);
+	}
+}
+
+void AOryxCharacter::RequestApplySwiftness()
+{
+	WalkSpeed   += SwiftnessBoost;
+	SprintSpeed += SwiftnessBoost;
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		// Apply to current MaxWalkSpeed (preserves sprinting state if held)
+		MoveComp->MaxWalkSpeed = WalkSpeed;
+	}
+}
+
+void AOryxCharacter::RequestApplyRestore()
+{
+	if (HealthComponent)
+	{
+		HealthComponent->ApplyHealing(HealthComponent->GetMaxHealth());
+	}
 }
 
 void AOryxCharacter::BeginPlay()
@@ -121,6 +156,10 @@ void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		// Dash
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started,
 			this, &AOryxCharacter::DoDash);
+
+		// Interact (totems, vendors, chests)
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started,
+			this, &AOryxCharacter::DoInteract);
 
 	}
 	else
@@ -232,6 +271,43 @@ void AOryxCharacter::DoDash()
 	LaunchCharacter(LaunchVelocity, true, false);
 
 	LastDashTime = CurrentTime;
+}
+
+void AOryxCharacter::DoInteract()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	// Trace forward from camera/eyes — feels more intuitive than from feet
+	const FVector TraceStart = GetActorLocation() + FVector(0.f, 0.f, 50.f);
+	const FVector TraceEnd = TraceStart + GetActorForwardVector() * InteractTraceDistance;
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(OryxInteract), false, this);
+
+	FHitResult Hit;
+	const bool bHit = World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
+
+#if WITH_EDITOR
+	DrawDebugLine(World, TraceStart, TraceEnd, bHit ? FColor::Green : FColor::Red, false, 1.5f, 0, 1.f);
+#endif
+
+	if (!bHit) return;
+
+	AActor* HitActor = Hit.GetActor();
+	if (!HitActor) return;
+
+	// Direct C++ interface implementer
+	if (IOryxInteractable* AsInteractable = Cast<IOryxInteractable>(HitActor))
+	{
+		IOryxInteractable::Execute_Interact(HitActor, this);
+		return;
+	}
+
+	// Blueprint implementer
+	if (HitActor->GetClass()->ImplementsInterface(UOryxInteractable::StaticClass()))
+	{
+		IOryxInteractable::Execute_Interact(HitActor, this);
+	}
 }
 
 void AOryxCharacter::HandleDeath(AActor* DeadActor)

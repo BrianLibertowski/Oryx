@@ -74,6 +74,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* DashAction;
 
+	/** Interact Input Action (totems, vendors, chests, doors) */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* InteractAction;
+
+	/** Forward distance the interact trace reaches (cm) */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Interact")
+	float InteractTraceDistance = 250.f;
+
 	// Stamina
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
 	float MaxStamina = 100.f;
@@ -142,6 +150,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoDash();
 
+	/** Handles interact input — line-traces forward and calls IOryxInteractable::Interact on the hit */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoInteract();
+
 	// --- Movement tuning ---
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Movement")
 	float WalkSpeed = 500.f;
@@ -157,7 +169,28 @@ public:
 
 	float LastDashTime = -1000.f;
 
+	// --- Reward tuning (read by RequestApply* functions; configurable per-class in BP) ---
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Rewards")
+	float VitalityBoost = 25.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Rewards")
+	float SwiftnessBoost = 50.f;
+
 public:
+
+	// --- Reward request layer (UI -> gameplay; future-proofed for Server RPCs in co-op) ---
+
+	/** Increase MaxHealth by VitalityBoost */
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Rewards")
+	void RequestApplyVitality();
+
+	/** Increase WalkSpeed + SprintSpeed by SwiftnessBoost */
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Rewards")
+	void RequestApplySwiftness();
+
+	/** Heal to full */
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Rewards")
+	void RequestApplyRestore();
 
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }

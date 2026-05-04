@@ -24,4 +24,9 @@ protected:
 	/** Blackboard key to write the chosen target into (must be Object, Base = Actor) */
 	UPROPERTY(EditAnywhere, Category = "Blackboard")
 	FBlackboardKeySelector TargetActorKey;
+
+	/** Maximum distance (cm) from this AI's pawn to consider a player as a valid target.
+	 *  Players beyond this range are ignored — task returns Failed. 0 = unlimited. */
+	UPROPERTY(EditAnywhere, Category = "Aggro", meta = (ClampMin = "0"))
+	float MaxAggroRange = 1500.f;
 };
