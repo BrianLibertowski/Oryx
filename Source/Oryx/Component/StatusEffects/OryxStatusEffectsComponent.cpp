@@ -3,6 +3,8 @@
 #include "Component/Health/OryxDamageTypes.h"
 #include "Component/Stats/OryxStatsComponent.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UOryxStatusEffectsComponent::UOryxStatusEffectsComponent()
 {
@@ -18,6 +20,20 @@ void UOryxStatusEffectsComponent::BeginPlay()
 	{
 		HealthComp = OwnerActor->FindComponentByClass<UOryxHealthComponent>();
 		StatsComp  = OwnerActor->FindComponentByClass<UOryxStatsComponent>();
+
+		// Fallback path for owners without Stats (enemies). Cache the base speed
+		// so we can restore it after a Chill expires.
+		if (!StatsComp)
+		{
+			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerActor))
+			{
+				MovementComp = OwnerChar->GetCharacterMovement();
+				if (MovementComp)
+				{
+					BaseMaxWalkSpeed = MovementComp->MaxWalkSpeed;
+				}
+			}
+		}
 	}
 }
 
@@ -47,24 +63,37 @@ void UOryxStatusEffectsComponent::ApplyEffect(FOryxStatusEffectSpec Spec)
 
 	if (Spec.Type == EOryxStatusEffectType::Chill)
 	{
-		Active.AppliedModifierId = ApplyChillModifier(Spec);
+		if (StatsComp)
+		{
+			Active.AppliedModifierId = ApplyChillModifier(Spec);
+		}
 	}
 
 	ActiveEffects.Add(Active);
+
+	// Direct movement path: recompute speed after the entry is in the list.
+	if (Spec.Type == EOryxStatusEffectType::Chill && !StatsComp)
+	{
+		RecalcDirectMovementSpeed();
+	}
+
 	OnEffectApplied.Broadcast(Spec.Type);
 }
 
 void UOryxStatusEffectsComponent::RemoveEffect(FGuid SourceId, EOryxStatusEffectType Type)
 {
+	bool bRemovedChill = false;
 	for (int32 i = ActiveEffects.Num() - 1; i >= 0; --i)
 	{
 		const FOryxActiveStatusEffect& E = ActiveEffects[i];
 		if (E.Spec.Type == Type && E.Spec.SourceId == SourceId)
 		{
+			if (E.Spec.Type == EOryxStatusEffectType::Chill && !StatsComp) bRemovedChill = true;
 			HandleEffectExpired(E);
 			ActiveEffects.RemoveAt(i);
 		}
 	}
+	if (bRemovedChill) RecalcDirectMovementSpeed();
 }
 
 void UOryxStatusEffectsComponent::ClearAllEffects()
@@ -74,6 +103,7 @@ void UOryxStatusEffectsComponent::ClearAllEffects()
 		HandleEffectExpired(E);
 	}
 	ActiveEffects.Reset();
+	if (!StatsComp) RecalcDirectMovementSpeed();
 }
 
 bool UOryxStatusEffectsComponent::HasEffect(EOryxStatusEffectType Type) const
@@ -110,8 +140,10 @@ void UOryxStatusEffectsComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		if (E.TimeRemaining <= 0.f)
 		{
+			const bool bWasChill = (E.Spec.Type == EOryxStatusEffectType::Chill);
 			HandleEffectExpired(E);
 			ActiveEffects.RemoveAt(i);
+			if (bWasChill && !StatsComp) RecalcDirectMovementSpeed();
 		}
 	}
 }
@@ -157,7 +189,26 @@ void UOryxStatusEffectsComponent::HandleEffectExpired(const FOryxActiveStatusEff
 {
 	if (Effect.Spec.Type == EOryxStatusEffectType::Chill)
 	{
-		RemoveStatModifier(Effect.AppliedModifierId);
+		if (StatsComp)
+		{
+			RemoveStatModifier(Effect.AppliedModifierId);
+		}
+		// Direct path is recomputed by the caller after this entry is dropped from ActiveEffects.
 	}
 	OnEffectExpired.Broadcast(Effect.Spec.Type);
+}
+
+void UOryxStatusEffectsComponent::RecalcDirectMovementSpeed()
+{
+	if (!MovementComp) return;
+
+	float Multiplier = 1.f;
+	for (const FOryxActiveStatusEffect& E : ActiveEffects)
+	{
+		if (E.Spec.Type == EOryxStatusEffectType::Chill)
+		{
+			Multiplier *= FMath::Max(0.f, 1.f - FMath::Abs(E.Spec.Magnitude));
+		}
+	}
+	MovementComp->MaxWalkSpeed = BaseMaxWalkSpeed * Multiplier;
 }

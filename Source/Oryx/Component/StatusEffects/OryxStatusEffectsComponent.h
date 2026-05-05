@@ -7,6 +7,7 @@
 
 class UOryxHealthComponent;
 class UOryxStatsComponent;
+class UCharacterMovementComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatusEffectApplied, EOryxStatusEffectType, Type);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatusEffectExpired, EOryxStatusEffectType, Type);
@@ -58,11 +59,20 @@ private:
 	/** Routes a DoT tick through the owner's HealthComponent using FOryxDamageEvent. */
 	void TickDoT(const FOryxActiveStatusEffect& Effect);
 
-	/** Pushes the MovementSpeed modifier for Chill; returns the modifier GUID. */
+	/** Pushes the MovementSpeed modifier for Chill (Stats path); returns the modifier GUID. */
 	FGuid ApplyChillModifier(const FOryxStatusEffectSpec& Spec) const;
 
 	/** Removes a stat-mod by GUID from the target's StatsComponent. */
 	void RemoveStatModifier(const FGuid& ModifierId) const;
+
+	/** Recomputes MaxWalkSpeed for owners with no StatsComponent (enemies). */
+	void RecalcDirectMovementSpeed();
+
+	UPROPERTY(Transient)
+	UCharacterMovementComponent* MovementComp = nullptr;
+
+	/** Cached base MaxWalkSpeed for the direct (no-Stats) path. Captured at BeginPlay. */
+	float BaseMaxWalkSpeed = 0.f;
 
 	/** Final cleanup hook — broadcast + free up stat-mod resources. */
 	void HandleEffectExpired(const FOryxActiveStatusEffect& Effect);
