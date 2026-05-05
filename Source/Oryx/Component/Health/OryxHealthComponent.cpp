@@ -36,24 +36,35 @@ void UOryxHealthComponent::HandleStatsChanged()
 	OnDamaged.Broadcast(CurrentHealth, 0.f);
 }
 
-void UOryxHealthComponent::ApplyDamage(float DamageAmount)
+void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 {
-	if (DamageAmount <= 0.f || bIsDead) return;
+	if (Event.BaseAmount <= 0.f || bIsDead) return;
+
+	// TODO(Phase1.W1.Step3): fold damage formula here — type scaling, crit roll, armor mitigation.
+	const float FinalDamage = Event.BaseAmount;
 
 	const float Max = GetMaxHealth();
-	CurrentHealth = FMath::Clamp(CurrentHealth - DamageAmount, 0.f, Max);
+	CurrentHealth = FMath::Clamp(CurrentHealth - FinalDamage, 0.f, Max);
 
 	UE_LOG(LogTemp, Log,
 		TEXT("%s took %.1f damage. Health: %.1f / %.1f"),
-		*GetOwner()->GetName(), DamageAmount, CurrentHealth, Max);
+		*GetOwner()->GetName(), FinalDamage, CurrentHealth, Max);
 
-	OnDamaged.Broadcast(CurrentHealth, DamageAmount);
+	OnDamaged.Broadcast(CurrentHealth, FinalDamage);
 
 	if (CurrentHealth <= 0.f)
 	{
 		bIsDead = true;
 		OnDeath.Broadcast(GetOwner());
 	}
+}
+
+void UOryxHealthComponent::ApplyDamage(float DamageAmount)
+{
+	FOryxDamageEvent Event;
+	Event.BaseAmount = DamageAmount;
+	Event.DamageType = EOryxDamageType::Physical;
+	ApplyDamageEvent(Event);
 }
 
 void UOryxHealthComponent::ApplyHealing(float HealAmount)

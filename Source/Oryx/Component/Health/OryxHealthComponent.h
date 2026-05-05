@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "OryxDamageTypes.h"
 #include "OryxHealthComponent.generated.h"
 
 class UOryxStatsComponent;
@@ -28,6 +29,11 @@ public:
 	FOnDeath OnDeath;
 
 	// --- Interface ---
+	/** Preferred entry point. Carries instigator / damage type / source so the formula can scale properly. */
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Health")
+	void ApplyDamageEvent(FOryxDamageEvent Event);
+
+	/** Compat wrapper. Wraps the float into a Physical FOryxDamageEvent with no instigator. */
 	UFUNCTION(BlueprintCallable, Category = "Oryx|Health")
 	void ApplyDamage(float DamageAmount);
 
