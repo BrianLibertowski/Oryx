@@ -15,6 +15,7 @@
 #include "Component/Ability/OryxAbilityComponent.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
 #include "Component/Stats/OryxStatsComponent.h"
+#include "Component/StatusEffects/OryxStatusEffectsComponent.h"
 #include "States/Player/OryxPlayerState.h"
 
 #include "Blueprint/UserWidget.h"
@@ -58,6 +59,7 @@ AOryxCharacter::AOryxCharacter()
 	AbilityComponent = CreateDefaultSubobject<UOryxAbilityComponent>(TEXT("AbilityComponent"));
 	HealthComponent = CreateDefaultSubobject<UOryxHealthComponent>(TEXT("HealthComponent"));
 	StatsComponent = CreateDefaultSubobject<UOryxStatsComponent>(TEXT("StatsComponent"));
+	StatusEffectsComponent = CreateDefaultSubobject<UOryxStatusEffectsComponent>(TEXT("StatusEffectsComponent"));
 	// Currency lives on AOryxPlayerState (co-op proof: persists across pawn destruction)
 }
 

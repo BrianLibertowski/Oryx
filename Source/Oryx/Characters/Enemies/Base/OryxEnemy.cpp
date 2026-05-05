@@ -1,6 +1,7 @@
 #include "OryxEnemy.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Component/Health/OryxHealthComponent.h"
+#include "Component/StatusEffects/OryxStatusEffectsComponent.h"
 #include "Actors/Pickups/OryxPickup_Gold.h"
 #include "EngineUtils.h"
 
@@ -9,6 +10,7 @@ AOryxEnemy::AOryxEnemy()
     PrimaryActorTick.bCanEverTick = true;
 
     HealthComponent = CreateDefaultSubobject<UOryxHealthComponent>(TEXT("HealthComponent"));
+    StatusEffectsComponent = CreateDefaultSubobject<UOryxStatusEffectsComponent>(TEXT("StatusEffectsComponent"));
 
     if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
     {

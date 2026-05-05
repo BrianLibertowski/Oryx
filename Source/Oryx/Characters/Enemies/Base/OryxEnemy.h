@@ -5,6 +5,7 @@
 #include "OryxEnemy.generated.h"
 
 class UOryxHealthComponent;
+class UOryxStatusEffectsComponent;
 class AOryxPickup_Gold;
 
 UCLASS()
@@ -21,6 +22,9 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Components")
     UOryxHealthComponent* HealthComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Components")
+    UOryxStatusEffectsComponent* StatusEffectsComponent;
 
     // Gold pickup class to drop on death — set in BP_OryxEnemy
     UPROPERTY(EditDefaultsOnly, Category = "Oryx|Loot")

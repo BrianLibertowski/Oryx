@@ -13,6 +13,7 @@ class AOryxProjectile;
 class UOryxAbilityComponent;
 class UOryxHealthComponent;
 class UOryxStatsComponent;
+class UOryxStatusEffectsComponent;
 class UOryxCurrencyComponent;
 class UUserWidget;
 
@@ -46,6 +47,10 @@ class AOryxCharacter : public ACharacter
 	/** Tracks all stats (per-class base + runtime modifiers from items, buffs, level-ups) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UOryxStatsComponent* StatsComponent;
+
+	/** Tracks active status effects (Burn/Poison/Chill). Ticks DoTs, applies stat-mod debuffs. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxStatusEffectsComponent* StatusEffectsComponent;
 
 protected:
 
@@ -226,6 +231,9 @@ public:
 
 	/** Returns StatsComponent subobject **/
 	FORCEINLINE UOryxStatsComponent* GetStatsComponent() const { return StatsComponent; }
+
+	/** Returns StatusEffectsComponent subobject **/
+	FORCEINLINE UOryxStatusEffectsComponent* GetStatusEffectsComponent() const { return StatusEffectsComponent; }
 
 	/** Returns this character's currency component (lives on PlayerState — survives pawn death) */
 	UFUNCTION(BlueprintPure, Category = "Oryx|Currency")

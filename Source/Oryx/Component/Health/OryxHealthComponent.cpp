@@ -1,5 +1,28 @@
 #include "OryxHealthComponent.h"
 #include "Component/Stats/OryxStatsComponent.h"
+#include "GameFramework/Actor.h"
+
+namespace
+{
+	/** Returns the elemental %-bonus stat for the type, or nullopt for Physical (which scales via PhysicalPower instead). */
+	bool TryGetElementalStat(EOryxDamageType Type, EOryxStat& OutStat)
+	{
+		switch (Type)
+		{
+		case EOryxDamageType::Fire:   OutStat = EOryxStat::FireDamage;   return true;
+		case EOryxDamageType::Cold:   OutStat = EOryxStat::ColdDamage;   return true;
+		case EOryxDamageType::Magic:  OutStat = EOryxStat::MagicDamage;  return true;
+		case EOryxDamageType::Curse:  OutStat = EOryxStat::CurseDamage;  return true;
+		case EOryxDamageType::Poison: OutStat = EOryxStat::PoisonDamage; return true;
+		default: return false;
+		}
+	}
+
+	UOryxStatsComponent* FindStats(const AActor* Actor)
+	{
+		return Actor ? Actor->FindComponentByClass<UOryxStatsComponent>() : nullptr;
+	}
+}
 
 UOryxHealthComponent::UOryxHealthComponent()
 {
@@ -40,8 +63,43 @@ void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 {
 	if (Event.BaseAmount <= 0.f || bIsDead) return;
 
-	// TODO(Phase1.W1.Step3): fold damage formula here — type scaling, crit roll, armor mitigation.
-	const float FinalDamage = Event.BaseAmount;
+	// --- Formula (D1) ---
+	// Final = Base × (1 + Stats[DamageType])
+	//             × (1 + Stats[PhysicalPower] if Physical)
+	//             × CritMult
+	//             × max(0, 1 - Stats[Armor]/100)
+	float Damage = Event.BaseAmount;
+
+	if (UOryxStatsComponent* InstStats = FindStats(Event.Instigator.Get()))
+	{
+		// Type bonus: elemental types use their %-bonus stat; physical uses PhysicalPower.
+		EOryxStat TypeStat;
+		if (TryGetElementalStat(Event.DamageType, TypeStat))
+		{
+			Damage *= (1.f + InstStats->GetStat(TypeStat));
+		}
+		else // Physical
+		{
+			Damage *= (1.f + InstStats->GetStat(EOryxStat::PhysicalPower));
+		}
+
+		const float CritChance = InstStats->GetStat(EOryxStat::CritChance);
+		if (CritChance > 0.f && FMath::FRand() < CritChance)
+		{
+			const float CritMult = InstStats->GetStat(EOryxStat::CritDamage);
+			// CritDamage stat is the multiplier itself (e.g. 1.5 = 150%). Guard against 0.
+			Damage *= (CritMult > 0.f ? CritMult : 1.f);
+		}
+	}
+
+	if (UOryxStatsComponent* TargetStats = FindStats(GetOwner()))
+	{
+		const float Armor = TargetStats->GetStat(EOryxStat::Armor);
+		Damage *= FMath::Max(0.f, 1.f - Armor / 100.f);
+	}
+
+	const float FinalDamage = Damage;
+	if (FinalDamage <= 0.f) return;
 
 	const float Max = GetMaxHealth();
 	CurrentHealth = FMath::Clamp(CurrentHealth - FinalDamage, 0.f, Max);
