@@ -12,6 +12,7 @@ struct FInputActionValue;
 class AOryxProjectile;
 class UOryxAbilityComponent;
 class UOryxHealthComponent;
+class UOryxStatsComponent;
 class UOryxCurrencyComponent;
 class UUserWidget;
 
@@ -41,6 +42,10 @@ class AOryxCharacter : public ACharacter
 	/** Holds this character's health state */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UOryxHealthComponent* HealthComponent;
+
+	/** Tracks all stats (per-class base + runtime modifiers from items, buffs, level-ups) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxStatsComponent* StatsComponent;
 
 protected:
 
@@ -155,11 +160,9 @@ public:
 	virtual void DoInteract();
 
 	// --- Movement tuning ---
+	/** Walk speed comes from Stats (MovementSpeed). Sprint = MovementSpeed * SprintMultiplier. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Movement")
-	float WalkSpeed = 500.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Movement")
-	float SprintSpeed = 800.f;
+	float SprintMultiplier = 1.6f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Movement")
 	float DashStrength = 1200.f;
@@ -168,6 +171,15 @@ public:
 	float DashCooldown = 1.0f;
 
 	float LastDashTime = -1000.f;
+
+	/** Tracks sprinting state so Stats-driven speed refreshes pick the correct multiplier */
+	bool bIsSprinting = false;
+
+	/** Re-applies MaxWalkSpeed from current Stats × sprint state. Called on stats changes and sprint toggles. */
+	void RefreshMovementSpeed();
+
+	UFUNCTION()
+	void HandleStatsChanged();
 
 	// --- Reward tuning (read by RequestApply* functions; configurable per-class in BP) ---
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Rewards")
@@ -203,6 +215,9 @@ public:
 
 	/** Returns HealthComponent subobject **/
 	FORCEINLINE UOryxHealthComponent* GetHealthComponent() const { return HealthComponent; }
+
+	/** Returns StatsComponent subobject **/
+	FORCEINLINE UOryxStatsComponent* GetStatsComponent() const { return StatsComponent; }
 
 	/** Returns this character's currency component (lives on PlayerState — survives pawn death) */
 	UFUNCTION(BlueprintPure, Category = "Oryx|Currency")

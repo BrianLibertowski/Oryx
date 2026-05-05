@@ -14,6 +14,7 @@
 #include "Component/Health/OryxHealthComponent.h"
 #include "Component/Ability/OryxAbilityComponent.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
+#include "Component/Stats/OryxStatsComponent.h"
 #include "States/Player/OryxPlayerState.h"
 
 #include "Blueprint/UserWidget.h"
@@ -38,7 +39,7 @@ AOryxCharacter::AOryxCharacter()
 
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	// MaxWalkSpeed is set in BeginPlay from Stats (MovementSpeed).
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -56,6 +57,7 @@ AOryxCharacter::AOryxCharacter()
 
 	AbilityComponent = CreateDefaultSubobject<UOryxAbilityComponent>(TEXT("AbilityComponent"));
 	HealthComponent = CreateDefaultSubobject<UOryxHealthComponent>(TEXT("HealthComponent"));
+	StatsComponent = CreateDefaultSubobject<UOryxStatsComponent>(TEXT("StatsComponent"));
 	// Currency lives on AOryxPlayerState (co-op proof: persists across pawn destruction)
 }
 
@@ -74,22 +76,31 @@ UOryxCurrencyComponent* AOryxCharacter::GetCurrencyComponent() const
 
 void AOryxCharacter::RequestApplyVitality()
 {
+	if (!StatsComponent) return;
+
+	FOryxStatModifier Mod;
+	Mod.Stat = EOryxStat::MaxHealth;
+	Mod.Op = EOryxModOp::Additive;
+	Mod.Value = VitalityBoost;
+	StatsComponent->AddModifier(Mod);
+	// HealthComponent listens to OnStatsChanged and re-clamps CurrentHealth.
+	// Vitality reward heals to full as a thank-you bump:
 	if (HealthComponent)
 	{
-		HealthComponent->IncreaseMaxHealth(VitalityBoost);
+		HealthComponent->ApplyHealing(VitalityBoost);
 	}
 }
 
 void AOryxCharacter::RequestApplySwiftness()
 {
-	WalkSpeed   += SwiftnessBoost;
-	SprintSpeed += SwiftnessBoost;
+	if (!StatsComponent) return;
 
-	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
-	{
-		// Apply to current MaxWalkSpeed (preserves sprinting state if held)
-		MoveComp->MaxWalkSpeed = WalkSpeed;
-	}
+	FOryxStatModifier Mod;
+	Mod.Stat = EOryxStat::MovementSpeed;
+	Mod.Op = EOryxModOp::Additive;
+	Mod.Value = SwiftnessBoost;
+	StatsComponent->AddModifier(Mod);
+	// HandleStatsChanged refreshes MaxWalkSpeed automatically.
 }
 
 void AOryxCharacter::RequestApplyRestore()
@@ -120,6 +131,29 @@ void AOryxCharacter::BeginPlay()
 	{
 		HealthComponent->OnDeath.AddDynamic(this, &AOryxCharacter::HandleDeath);
 	}
+
+	if (StatsComponent)
+	{
+		StatsComponent->OnStatsChanged.AddDynamic(this, &AOryxCharacter::HandleStatsChanged);
+	}
+
+	// Seed MaxWalkSpeed from Stats now that components are wired
+	RefreshMovementSpeed();
+}
+
+void AOryxCharacter::HandleStatsChanged()
+{
+	RefreshMovementSpeed();
+}
+
+void AOryxCharacter::RefreshMovementSpeed()
+{
+	if (!StatsComponent) return;
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	if (!MoveComp) return;
+
+	const float Base = StatsComponent->GetStat(EOryxStat::MovementSpeed);
+	MoveComp->MaxWalkSpeed = bIsSprinting ? Base * SprintMultiplier : Base;
 }
 
 void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -228,18 +262,14 @@ void AOryxCharacter::DoJumpEnd()
 
 void AOryxCharacter::DoSprintStart()
 {
-	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
-	{
-		MoveComp->MaxWalkSpeed = SprintSpeed;
-	}
+	bIsSprinting = true;
+	RefreshMovementSpeed();
 }
 
 void AOryxCharacter::DoSprintEnd()
 {
-	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
-	{
-		MoveComp->MaxWalkSpeed = WalkSpeed;
-	}
+	bIsSprinting = false;
+	RefreshMovementSpeed();
 }
 
 void AOryxCharacter::DoDash()

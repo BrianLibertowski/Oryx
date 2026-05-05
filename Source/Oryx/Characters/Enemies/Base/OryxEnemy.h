@@ -34,6 +34,16 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Oryx|Loot")
     int32 GoldDropValue = 1;
 
+    // --- Combat ---
+
+    /** Damage dealt per melee swing. Read by BTT_MeleeAttack. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
+    float AttackDamage = 15.f;
+
+    /** Max distance (cm) at which the enemy can land a melee hit. Read by BTT_MeleeAttack. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Combat")
+    float AttackRange = 150.f;
+
     // --- Leash ---
 
     /** How far this enemy can wander from its spawn before dropping aggro (cm). 0 = no leash. */
@@ -60,6 +70,12 @@ protected:
     AActor* ForcedTarget = nullptr;
 
 public:
+    UFUNCTION(BlueprintPure, Category = "Oryx|Combat")
+    float GetAttackDamage() const { return AttackDamage; }
+
+    UFUNCTION(BlueprintPure, Category = "Oryx|Combat")
+    float GetAttackRange() const { return AttackRange; }
+
     UFUNCTION(BlueprintPure, Category = "Oryx|AI")
     FVector GetSpawnLocation() const { return SpawnLocation; }
 

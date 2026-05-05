@@ -36,9 +36,9 @@ public:
 	FOnWaveStarted OnWaveStarted;
 
 protected:
-	// Enemy class to spawn each wave
+	// Enemy classes to spawn from. One is picked at random per spawn slot.
 	UPROPERTY(EditAnywhere, Category = "Oryx|Waves")
-	TSubclassOf<AOryxEnemy> EnemyClass;
+	TArray<TSubclassOf<AOryxEnemy>> EnemyPool;
 
 	// Spawn point actors placed in the level
 	UPROPERTY(EditAnywhere, Category = "Oryx|Waves")

@@ -40,9 +40,9 @@ void AOryxWaveManager::RegisterEnemy(AOryxEnemy* Enemy)
 
 void AOryxWaveManager::StartNextWave()
 {
-	if (!EnemyClass || SpawnPoints.IsEmpty())
+	if (EnemyPool.IsEmpty() || SpawnPoints.IsEmpty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OryxWaveManager: No EnemyClass or SpawnPoints set."));
+		UE_LOG(LogTemp, Warning, TEXT("OryxWaveManager: EnemyPool or SpawnPoints is empty."));
 		return;
 	}
 
@@ -64,7 +64,11 @@ void AOryxWaveManager::StartNextWave()
 		if (!SpawnPoint) continue;
 
 		FTransform SpawnTransform = SpawnPoint->GetActorTransform();
-		AOryxEnemy* Enemy = World->SpawnActor<AOryxEnemy>(EnemyClass, SpawnTransform, SpawnParams);
+
+		TSubclassOf<AOryxEnemy> PickedClass = EnemyPool[FMath::RandRange(0, EnemyPool.Num() - 1)];
+		if (!PickedClass) continue;
+
+		AOryxEnemy* Enemy = World->SpawnActor<AOryxEnemy>(PickedClass, SpawnTransform, SpawnParams);
 
 		RegisterEnemy(Enemy);
 	}

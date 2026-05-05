@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "OryxHealthComponent.generated.h"
 
+class UOryxStatsComponent;
+
 // Broadcast when damage is received
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamaged, float, NewHealth, float, DamageAmount);
 
@@ -39,7 +41,7 @@ public:
 	float GetCurrentHealth() const { return CurrentHealth; }
 
 	UFUNCTION(BlueprintPure, Category = "Oryx|Health")
-	float GetMaxHealth() const { return MaxHealth; }
+	float GetMaxHealth() const;
 
 	UFUNCTION(BlueprintPure, Category = "Oryx|Health")
 	bool IsDead() const { return bIsDead; }
@@ -47,7 +49,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void HandleStatsChanged();
+
 private:
+	/** Fallback when owner has no UOryxStatsComponent (e.g. enemies). Players read MaxHealth from Stats. */
 	UPROPERTY(EditAnywhere, Category = "Oryx|Health")
 	float MaxHealth = 100.f;
 
@@ -56,4 +62,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Oryx|Health")
 	bool bIsDead = false;
+
+	/** Cached on BeginPlay; null for owners without stats (enemies). */
+	UPROPERTY(Transient)
+	UOryxStatsComponent* StatsComp = nullptr;
 };
