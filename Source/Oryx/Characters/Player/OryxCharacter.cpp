@@ -195,6 +195,13 @@ void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started,
 			this, &AOryxCharacter::DoInteract);
 
+		// Toggle Stats Screen (Tab) — BP implements OnToggleStatsScreen
+		if (ToggleStatsAction)
+		{
+			EnhancedInputComponent->BindAction(ToggleStatsAction, ETriggerEvent::Started,
+				this, &AOryxCharacter::OnToggleStatsScreen);
+		}
+
 	}
 	else
 	{

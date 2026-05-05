@@ -83,6 +83,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* InteractAction;
 
+	/** Toggle Stats Screen Input Action (default Tab) */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* ToggleStatsAction;
+
 	/** Forward distance the interact trace reaches (cm) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Interact")
 	float InteractTraceDistance = 250.f;
@@ -158,6 +162,10 @@ public:
 	/** Handles interact input — line-traces forward and calls IOryxInteractable::Interact on the hit */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoInteract();
+
+	/** Fires when ToggleStatsAction is pressed. BP_OryxCharacter implements widget show/hide. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Oryx|UI")
+	void OnToggleStatsScreen();
 
 	// --- Movement tuning ---
 	/** Walk speed comes from Stats (MovementSpeed). Sprint = MovementSpeed * SprintMultiplier. */
