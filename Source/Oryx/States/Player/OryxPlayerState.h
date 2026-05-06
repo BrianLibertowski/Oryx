@@ -6,6 +6,7 @@
 
 class UOryxCurrencyComponent;
 class UOryxLevelComponent;
+class UOryxInventoryComponent;
 
 /**
  *  Per-player persistent run state.
@@ -28,6 +29,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Oryx|PlayerState")
 	UOryxLevelComponent* GetLevelComponent() const { return LevelComponent; }
 
+	/** Returns the inventory component. Holds owned items + tracks applied stat modifiers for clean removal. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|PlayerState")
+	UOryxInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -39,4 +44,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UOryxLevelComponent* LevelComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxInventoryComponent* InventoryComponent;
 };

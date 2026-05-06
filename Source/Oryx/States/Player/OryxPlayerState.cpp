@@ -1,11 +1,13 @@
 #include "OryxPlayerState.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
 #include "Component/Level/OryxLevelComponent.h"
+#include "Component/Inventory/OryxInventoryComponent.h"
 
 AOryxPlayerState::AOryxPlayerState()
 {
 	CurrencyComponent = CreateDefaultSubobject<UOryxCurrencyComponent>(TEXT("CurrencyComponent"));
 	LevelComponent = CreateDefaultSubobject<UOryxLevelComponent>(TEXT("LevelComponent"));
+	InventoryComponent = CreateDefaultSubobject<UOryxInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 void AOryxPlayerState::BeginPlay()
