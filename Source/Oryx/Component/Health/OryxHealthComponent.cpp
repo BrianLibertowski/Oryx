@@ -69,6 +69,7 @@ void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 	//             × CritMult
 	//             × max(0, 1 - Stats[Armor]/100)
 	float Damage = Event.BaseAmount;
+	bool bWasCrit = false;
 
 	if (UOryxStatsComponent* InstStats = FindStats(Event.Instigator.Get()))
 	{
@@ -89,6 +90,7 @@ void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 			const float CritMult = InstStats->GetStat(EOryxStat::CritDamage);
 			// CritDamage stat is the multiplier itself (e.g. 1.5 = 150%). Guard against 0.
 			Damage *= (CritMult > 0.f ? CritMult : 1.f);
+			bWasCrit = true;
 		}
 	}
 
@@ -109,6 +111,7 @@ void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 		*GetOwner()->GetName(), FinalDamage, CurrentHealth, Max);
 
 	OnDamaged.Broadcast(CurrentHealth, FinalDamage);
+	OnDamageReceived.Broadcast(Event, FinalDamage, bWasCrit);
 
 	if (CurrentHealth <= 0.f)
 	{

@@ -7,8 +7,12 @@
 
 class UOryxStatsComponent;
 
-// Broadcast when damage is received
+// Broadcast when damage is received (legacy — used by HUD bars). Healing fires this with negative DamageAmount.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamaged, float, NewHealth, float, DamageAmount);
+
+// Broadcast after the damage formula resolves. Carries the full event + final number + crit flag.
+// Used by floating damage numbers, hit reactions, on-hit triggers.
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDamageReceived, FOryxDamageEvent, Event, float, FinalDamage, bool, bWasCrit);
 
 // Broadcast when health reaches zero
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeath, AActor*, DeadActor);
@@ -24,6 +28,9 @@ public:
 	// --- Delegates ---
 	UPROPERTY(BlueprintAssignable, Category = "Oryx|Health")
 	FOnDamaged OnDamaged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Oryx|Health")
+	FOnDamageReceived OnDamageReceived;
 
 	UPROPERTY(BlueprintAssignable, Category = "Oryx|Health")
 	FOnDeath OnDeath;
