@@ -92,6 +92,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* ToggleStatsAction;
 
+	/** Toggle Settings / Pause Input Action (default Esc). BP handles the widget + pause logic. */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* ToggleSettingsAction;
+
 	/** Forward distance the interact trace reaches (cm) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Interact")
 	float InteractTraceDistance = 250.f;
@@ -171,6 +175,15 @@ public:
 	/** Fires when ToggleStatsAction is pressed. BP_OryxCharacter implements widget show/hide. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Oryx|UI")
 	void OnToggleStatsScreen();
+
+	/**
+	 *  Fires when ToggleSettingsAction is pressed. BP_OryxCharacter implements:
+	 *    - Create/destroy WBP_Settings.
+	 *    - In standalone (NetMode == Standalone) toggle Set Game Paused.
+	 *    - In networked play, do not pause; let the widget overlay while game runs.
+	 */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Oryx|UI")
+	void OnToggleSettingsScreen();
 
 	// --- Movement tuning ---
 	/** Walk speed comes from Stats (MovementSpeed). Sprint = MovementSpeed * SprintMultiplier. */

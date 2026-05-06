@@ -1,5 +1,6 @@
 #include "OryxAbilityComponent.h"
 #include "Systems/Abilities/Base/OryxAbility.h"
+#include "Component/Stats/OryxStatsComponent.h"
 #include "Engine/World.h"
 
 UOryxAbilityComponent::UOryxAbilityComponent()
@@ -31,7 +32,11 @@ bool UOryxAbilityComponent::TryActivateAbility(int32 Index)
 	if (!World) return false;
 
 	const float Now = World->GetTimeSeconds();
-	if (Ability->IsOnCooldown(Now)) return false;
+
+	// Stat-scaled cooldown: basic attacks scale with AttackSpeed; everything scales with CooldownReduction.
+	const UOryxStatsComponent* Stats = GetOwner() ? GetOwner()->FindComponentByClass<UOryxStatsComponent>() : nullptr;
+	const float Effective = Ability->GetEffectiveCooldown(Stats);
+	if ((Now - Ability->GetLastActivatedTime()) < Effective) return false;
 
 	Ability->Activate(GetOwner());
 	Ability->MarkActivated(Now);
