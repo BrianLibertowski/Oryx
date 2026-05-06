@@ -72,6 +72,30 @@ UOryxCurrencyComponent* AOryxCharacter::GetCurrencyComponent() const
 	return nullptr;
 }
 
+float AOryxCharacter::GetMaxStamina() const
+{
+	return StatsComponent ? StatsComponent->GetStat(EOryxStat::MaxStamina) : MaxStamina;
+}
+
+float AOryxCharacter::GetStaminaFraction() const
+{
+	const float Max = GetMaxStamina();
+	if (Max <= 0.f) return 1.f;
+	return FMath::Clamp(CurrentStamina / Max, 0.f, 1.f);
+}
+
+float AOryxCharacter::GetMaxMana() const
+{
+	return StatsComponent ? StatsComponent->GetStat(EOryxStat::MaxMana) : MaxMana;
+}
+
+float AOryxCharacter::GetManaFraction() const
+{
+	const float Max = GetMaxMana();
+	if (Max <= 0.f) return 1.f;
+	return FMath::Clamp(CurrentMana / Max, 0.f, 1.f);
+}
+
 // --- Reward request layer ---
 // Wrappers stay single-line in single-player. When co-op lands, mark these as
 // Server, Reliable RPCs and add HasAuthority gates — call sites don't change.

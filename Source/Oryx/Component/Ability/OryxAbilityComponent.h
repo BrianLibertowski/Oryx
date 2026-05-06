@@ -23,6 +23,18 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Oryx|Ability")
 	int32 GetAbilityCount() const { return Abilities.Num(); }
 
+	/**
+	 *  Returns 0..1 cooldown progress for the ability at Index.
+	 *  1 = ready to fire, 0 = just activated, intermediate = filling.
+	 *  HUD radial pips bind to this.
+	 */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Ability")
+	float GetCooldownFraction(int32 Index) const;
+
+	/** Returns the ability's effective cooldown duration after stat scaling, or 0 if invalid. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Ability")
+	float GetEffectiveCooldown(int32 Index) const;
+
 protected:
 	virtual void BeginPlay() override;
 

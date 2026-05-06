@@ -21,6 +21,12 @@ void UOryxStatusEffectsComponent::BeginPlay()
 		HealthComp = OwnerActor->FindComponentByClass<UOryxHealthComponent>();
 		StatsComp  = OwnerActor->FindComponentByClass<UOryxStatsComponent>();
 
+		// Defensive cleanup on death — prevents zombie stat-mods (e.g. Chill) lingering past death.
+		if (HealthComp)
+		{
+			HealthComp->OnDeath.AddDynamic(this, &UOryxStatusEffectsComponent::HandleOwnerDeath);
+		}
+
 		// Fallback path for owners without Stats (enemies). Cache the base speed
 		// so we can restore it after a Chill expires.
 		if (!StatsComp)
@@ -35,6 +41,14 @@ void UOryxStatusEffectsComponent::BeginPlay()
 			}
 		}
 	}
+
+	// Start with tick disabled — only run when there's something to tick.
+	SetComponentTickEnabled(false);
+}
+
+void UOryxStatusEffectsComponent::HandleOwnerDeath(AActor* /*DeadActor*/)
+{
+	ClearAllEffects();
 }
 
 void UOryxStatusEffectsComponent::ApplyEffect(FOryxStatusEffectSpec Spec)
@@ -76,6 +90,9 @@ void UOryxStatusEffectsComponent::ApplyEffect(FOryxStatusEffectSpec Spec)
 	{
 		RecalcDirectMovementSpeed();
 	}
+
+	// Wake the tick now that we have something to process.
+	SetComponentTickEnabled(true);
 
 	OnEffectApplied.Broadcast(Spec.Type);
 }
@@ -145,6 +162,12 @@ void UOryxStatusEffectsComponent::TickComponent(float DeltaTime, ELevelTick Tick
 			ActiveEffects.RemoveAt(i);
 			if (bWasChill && !StatsComp) RecalcDirectMovementSpeed();
 		}
+	}
+
+	// Park the tick once the list drains.
+	if (ActiveEffects.Num() == 0)
+	{
+		SetComponentTickEnabled(false);
 	}
 }
 

@@ -5,6 +5,7 @@
 #include "OryxPlayerState.generated.h"
 
 class UOryxCurrencyComponent;
+class UOryxLevelComponent;
 
 /**
  *  Per-player persistent run state.
@@ -23,7 +24,19 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Oryx|PlayerState")
 	UOryxCurrencyComponent* GetCurrencyComponent() const { return CurrencyComponent; }
 
+	/** Returns the level component (XP / level / level-up). MVP placeholder; per-class tracking arrives in Phase 4. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|PlayerState")
+	UOryxLevelComponent* GetLevelComponent() const { return LevelComponent; }
+
 protected:
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void HandleLevelUp(int32 NewLevel, int32 OnyxAwarded);
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UOryxCurrencyComponent* CurrencyComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxLevelComponent* LevelComponent;
 };

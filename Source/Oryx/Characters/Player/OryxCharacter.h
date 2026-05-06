@@ -251,4 +251,28 @@ public:
 	/** Returns this character's currency component (lives on PlayerState — survives pawn death) */
 	UFUNCTION(BlueprintPure, Category = "Oryx|Currency")
 	UOryxCurrencyComponent* GetCurrencyComponent() const;
+
+	// --- Resource getters (HUD-bound; consumers wire in later) ---
+
+	/** Max stamina, sourced from Stats (EOryxStat::MaxStamina) with fallback to MaxStamina UPROPERTY. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
+	float GetMaxStamina() const;
+
+	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
+	float GetCurrentStamina() const { return CurrentStamina; }
+
+	/** 0..1 fraction for HUD stamina bar. Returns 1 if MaxStamina <= 0. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
+	float GetStaminaFraction() const;
+
+	/** Max mana, sourced from Stats (EOryxStat::MaxMana) with fallback to MaxMana UPROPERTY. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
+	float GetMaxMana() const;
+
+	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
+	float GetCurrentMana() const { return CurrentMana; }
+
+	/** 0..1 fraction for HUD mana bar. Returns 1 if MaxMana <= 0. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
+	float GetManaFraction() const;
 };

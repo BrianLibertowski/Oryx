@@ -55,6 +55,9 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION()
+	void HandleOwnerDeath(AActor* DeadActor);
+
 private:
 	/** Routes a DoT tick through the owner's HealthComponent using FOryxDamageEvent. */
 	void TickDoT(const FOryxActiveStatusEffect& Effect);

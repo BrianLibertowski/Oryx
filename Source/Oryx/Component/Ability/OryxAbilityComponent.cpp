@@ -47,3 +47,26 @@ UOryxAbility* UOryxAbilityComponent::GetAbility(int32 Index) const
 {
 	return Abilities.IsValidIndex(Index) ? Abilities[Index] : nullptr;
 }
+
+float UOryxAbilityComponent::GetEffectiveCooldown(int32 Index) const
+{
+	const UOryxAbility* Ability = GetAbility(Index);
+	if (!Ability) return 0.f;
+	const UOryxStatsComponent* Stats = GetOwner() ? GetOwner()->FindComponentByClass<UOryxStatsComponent>() : nullptr;
+	return Ability->GetEffectiveCooldown(Stats);
+}
+
+float UOryxAbilityComponent::GetCooldownFraction(int32 Index) const
+{
+	const UOryxAbility* Ability = GetAbility(Index);
+	if (!Ability) return 1.f;
+
+	const UWorld* World = GetWorld();
+	if (!World) return 1.f;
+
+	const float Effective = GetEffectiveCooldown(Index);
+	if (Effective <= 0.f) return 1.f;
+
+	const float Elapsed = World->GetTimeSeconds() - Ability->GetLastActivatedTime();
+	return FMath::Clamp(Elapsed / Effective, 0.f, 1.f);
+}
