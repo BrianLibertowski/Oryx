@@ -96,6 +96,80 @@ float AOryxCharacter::GetManaFraction() const
 	return FMath::Clamp(CurrentMana / Max, 0.f, 1.f);
 }
 
+void AOryxCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	const UWorld* World = GetWorld();
+	if (!World) return;
+
+	const float Now = World->GetTimeSeconds();
+
+	// Sprint drains stamina; auto-cancel when empty.
+	if (bIsSprinting && SprintStaminaCostPerSec > 0.f)
+	{
+		const float Drain = SprintStaminaCostPerSec * DeltaSeconds;
+		CurrentStamina = FMath::Max(0.f, CurrentStamina - Drain);
+		LastStaminaUseTime = Now;
+
+		if (CurrentStamina <= 0.f)
+		{
+			bIsSprinting = false;
+			RefreshMovementSpeed();
+		}
+	}
+
+	// Stamina regen — gated by delay since last use.
+	const float MaxSt = GetMaxStamina();
+	if (CurrentStamina < MaxSt && StaminaRegenPerSec > 0.f && !bIsSprinting
+	    && (Now - LastStaminaUseTime) >= StaminaRegenDelay)
+	{
+		CurrentStamina = FMath::Min(MaxSt, CurrentStamina + StaminaRegenPerSec * DeltaSeconds);
+	}
+
+	// Mana regen — gated by delay since last spend.
+	const float MaxMn = GetMaxMana();
+	if (CurrentMana < MaxMn && ManaRegenPerSec > 0.f
+	    && (Now - LastManaUseTime) >= ManaRegenDelay)
+	{
+		CurrentMana = FMath::Min(MaxMn, CurrentMana + ManaRegenPerSec * DeltaSeconds);
+	}
+}
+
+bool AOryxCharacter::TryConsumeStamina(float Amount)
+{
+	if (Amount <= 0.f) return true;
+	if (CurrentStamina < Amount) return false;
+	CurrentStamina -= Amount;
+	if (const UWorld* World = GetWorld())
+	{
+		LastStaminaUseTime = World->GetTimeSeconds();
+	}
+	return true;
+}
+
+void AOryxCharacter::SetCurrentStamina(float Amount)
+{
+	CurrentStamina = FMath::Clamp(Amount, 0.f, GetMaxStamina());
+}
+
+bool AOryxCharacter::TryConsumeMana(float Amount)
+{
+	if (Amount <= 0.f) return true;
+	if (CurrentMana < Amount) return false;
+	CurrentMana -= Amount;
+	if (const UWorld* World = GetWorld())
+	{
+		LastManaUseTime = World->GetTimeSeconds();
+	}
+	return true;
+}
+
+void AOryxCharacter::SetCurrentMana(float Amount)
+{
+	CurrentMana = FMath::Clamp(Amount, 0.f, GetMaxMana());
+}
+
 // --- Reward request layer ---
 // Wrappers stay single-line in single-player. When co-op lands, mark these as
 // Server, Reliable RPCs and add HasAuthority gates — call sites don't change.
@@ -302,6 +376,9 @@ void AOryxCharacter::DoJumpEnd()
 
 void AOryxCharacter::DoSprintStart()
 {
+	// Gate: need at least some stamina to start sprinting (avoids 1-frame sprint flicker on empty bar).
+	if (CurrentStamina <= 0.f) return;
+
 	bIsSprinting = true;
 	RefreshMovementSpeed();
 }
@@ -323,6 +400,12 @@ void AOryxCharacter::DoDash()
 	if (CurrentTime - LastDashTime < DashCooldown)
 	{
 		// Still on cooldown
+		return;
+	}
+
+	// Stamina gate (configurable in BP defaults via DashStaminaCost)
+	if (!TryConsumeStamina(DashStaminaCost))
+	{
 		return;
 	}
 

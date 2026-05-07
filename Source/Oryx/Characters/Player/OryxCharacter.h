@@ -132,6 +132,8 @@ protected:
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	/** Called for movement input (Enhanced Input) */
 	void Move(const FInputActionValue& Value);
 
@@ -268,6 +270,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
 	float GetStaminaFraction() const;
 
+	/** Consumes stamina if available. Returns true if drained, false if not enough (caller should abort the action). */
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Resources")
+	bool TryConsumeStamina(float Amount);
+
+	/** Direct setter — clamps to [0, MaxStamina]. Use TryConsumeStamina for gated consumption. */
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Resources")
+	void SetCurrentStamina(float Amount);
+
 	/** Max mana, sourced from Stats (EOryxStat::MaxMana) with fallback to MaxMana UPROPERTY. */
 	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
 	float GetMaxMana() const;
@@ -278,4 +288,42 @@ public:
 	/** 0..1 fraction for HUD mana bar. Returns 1 if MaxMana <= 0. */
 	UFUNCTION(BlueprintPure, Category = "Oryx|Resources")
 	float GetManaFraction() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Resources")
+	bool TryConsumeMana(float Amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Resources")
+	void SetCurrentMana(float Amount);
+
+	/** Stamina regen per second once the regen delay elapses. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Resources")
+	float StaminaRegenPerSec = 25.f;
+
+	/** Seconds after the last stamina spend before regen kicks in. Gives the "drained" feel. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Resources")
+	float StaminaRegenDelay = 0.5f;
+
+	/** Stamina cost per Dash. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Resources")
+	float DashStaminaCost = 25.f;
+
+	/** Stamina drained per second while sprinting. Sprint auto-cancels at 0 stamina. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Resources")
+	float SprintStaminaCostPerSec = 15.f;
+
+	/** Mana regen per second after the regen delay. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Resources")
+	float ManaRegenPerSec = 15.f;
+
+	/** Seconds after the last mana spend before regen kicks in. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Resources")
+	float ManaRegenDelay = 1.0f;
+
+private:
+	/** Stamps last spend time for regen-delay gating. -1 means never used. */
+	UPROPERTY(VisibleAnywhere, Category = "Oryx|Resources")
+	float LastStaminaUseTime = -1000.f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Oryx|Resources")
+	float LastManaUseTime = -1000.f;
 };
