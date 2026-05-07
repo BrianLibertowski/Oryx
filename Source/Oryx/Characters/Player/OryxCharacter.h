@@ -92,9 +92,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* ToggleStatsAction;
 
-	/** Toggle Settings / Pause Input Action (default Esc). BP handles the widget + pause logic. */
+	/** Toggle in-game pause menu Input Action (default Esc). BP handles the widget hub + pause logic. */
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* ToggleSettingsAction;
+	UInputAction* ToggleMenuAction;
 
 	/** Forward distance the interact trace reaches (cm) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Interact")
@@ -177,13 +177,16 @@ public:
 	void OnToggleStatsScreen();
 
 	/**
-	 *  Fires when ToggleSettingsAction is pressed. BP_OryxCharacter implements:
-	 *    - Create/destroy WBP_Settings.
+	 *  Fires when ToggleMenuAction is pressed. BP_OryxCharacter implements:
+	 *    - Create/destroy the in-game pause menu hub (WBP_PauseMenu) — Resume / Settings / Save / Leave / Quit.
 	 *    - In standalone (NetMode == Standalone) toggle Set Game Paused.
-	 *    - In networked play, do not pause; let the widget overlay while game runs.
+	 *    - In networked play, do not pause; widget overlays while game runs.
+	 *
+	 *  BlueprintCallable so external widgets (Resume button, Settings close, etc) can invoke
+	 *  the same toggle path the Esc input does.
 	 */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Oryx|UI")
-	void OnToggleSettingsScreen();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Oryx|UI")
+	void OnToggleMenu();
 
 	// --- Movement tuning ---
 	/** Walk speed comes from Stats (MovementSpeed). Sprint = MovementSpeed * SprintMultiplier. */

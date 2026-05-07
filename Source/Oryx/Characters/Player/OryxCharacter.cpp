@@ -228,11 +228,11 @@ void AOryxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 				this, &AOryxCharacter::OnToggleStatsScreen);
 		}
 
-		// Toggle Settings / Pause (Esc) — BP implements OnToggleSettingsScreen
-		if (ToggleSettingsAction)
+		// Toggle in-game pause menu (Esc) — BP implements OnToggleMenu
+		if (ToggleMenuAction)
 		{
-			EnhancedInputComponent->BindAction(ToggleSettingsAction, ETriggerEvent::Started,
-				this, &AOryxCharacter::OnToggleSettingsScreen);
+			EnhancedInputComponent->BindAction(ToggleMenuAction, ETriggerEvent::Started,
+				this, &AOryxCharacter::OnToggleMenu);
 		}
 
 	}

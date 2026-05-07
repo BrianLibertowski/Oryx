@@ -15,7 +15,10 @@ UCLASS(abstract)
 class AOryxPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
+public:
+	AOryxPlayerController();
+
 protected:
 
 	/** Input Mapping Contexts */

@@ -6,6 +6,12 @@
 #include "Oryx.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
+AOryxPlayerController::AOryxPlayerController()
+{
+	// Keep ticking input while game is paused so the pause menu's Esc toggle still fires.
+	bShouldPerformFullTickWhenPaused = true;
+}
+
 void AOryxPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
