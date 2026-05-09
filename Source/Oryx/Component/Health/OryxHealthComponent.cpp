@@ -84,13 +84,23 @@ void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 			Damage *= (1.f + InstStats->GetStat(EOryxStat::PhysicalPower));
 		}
 
+		// Overflow crit: every full 1.0 of CritChance = guaranteed crit layer; fractional = roll.
+		// Damage multiplied by CritDamage^TotalCrits so 200% crit = double-crit = ×CritDamage^2.
 		const float CritChance = InstStats->GetStat(EOryxStat::CritChance);
-		if (CritChance > 0.f && FMath::FRand() < CritChance)
+		const float CritMult = InstStats->GetStat(EOryxStat::CritDamage);
+		if (CritChance > 0.f && CritMult > 0.f)
 		{
-			const float CritMult = InstStats->GetStat(EOryxStat::CritDamage);
-			// CritDamage stat is the multiplier itself (e.g. 1.5 = 150%). Guard against 0.
-			Damage *= (CritMult > 0.f ? CritMult : 1.f);
-			bWasCrit = true;
+			int32 TotalCrits = FMath::FloorToInt(CritChance);
+			const float Frac = CritChance - static_cast<float>(TotalCrits);
+			if (Frac > 0.f && FMath::FRand() < Frac)
+			{
+				TotalCrits++;
+			}
+			if (TotalCrits > 0)
+			{
+				Damage *= FMath::Pow(CritMult, static_cast<float>(TotalCrits));
+				bWasCrit = true;
+			}
 		}
 	}
 
