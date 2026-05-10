@@ -9,8 +9,6 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 
-#include "Projectiles/Base/OryxProjectile.h"
-
 #include "Component/Health/OryxHealthComponent.h"
 #include "Component/Ability/OryxAbilityComponent.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
