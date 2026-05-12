@@ -24,7 +24,12 @@ enum class EOryxStat : uint8
 	Armor              UMETA(DisplayName = "Armor"),
 	CastSpeed          UMETA(DisplayName = "Cast Speed"),
 	MaxMana            UMETA(DisplayName = "Max Mana"),
-	MaxStamina         UMETA(DisplayName = "Max Stamina")
+	MaxStamina         UMETA(DisplayName = "Max Stamina"),
+	HealthRegen        UMETA(DisplayName = "Health Regen (HP/sec)"),
+	ManaRegen          UMETA(DisplayName = "Mana Regen (MP/sec)"),
+	StaminaRegen       UMETA(DisplayName = "Stamina Regen (SP/sec)"),
+	DamageReduction    UMETA(DisplayName = "Damage Reduction (0-1)"),
+	GoldGain           UMETA(DisplayName = "Gold Gain (0-1 multiplier)")
 };
 
 /** Modifier operation type. Final value = (Base + Sum(Additive)) * (1 + Sum(Multiplicative)). */

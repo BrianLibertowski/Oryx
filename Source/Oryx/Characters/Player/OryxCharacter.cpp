@@ -117,20 +117,35 @@ void AOryxCharacter::Tick(float DeltaSeconds)
 		}
 	}
 
-	// Stamina regen — gated by delay since last use.
+	// Stamina regen — gated by delay since last use. Stat StaminaRegen adds to base.
 	const float MaxSt = GetMaxStamina();
-	if (CurrentStamina < MaxSt && StaminaRegenPerSec > 0.f && !bIsSprinting
+	const float StaminaRate = StaminaRegenPerSec
+		+ (StatsComponent ? StatsComponent->GetStat(EOryxStat::StaminaRegen) : 0.f);
+	if (CurrentStamina < MaxSt && StaminaRate > 0.f && !bIsSprinting
 	    && (Now - LastStaminaUseTime) >= StaminaRegenDelay)
 	{
-		CurrentStamina = FMath::Min(MaxSt, CurrentStamina + StaminaRegenPerSec * DeltaSeconds);
+		CurrentStamina = FMath::Min(MaxSt, CurrentStamina + StaminaRate * DeltaSeconds);
 	}
 
-	// Mana regen — gated by delay since last spend.
+	// Mana regen — gated by delay since last spend. Stat ManaRegen adds to base.
 	const float MaxMn = GetMaxMana();
-	if (CurrentMana < MaxMn && ManaRegenPerSec > 0.f
+	const float ManaRate = ManaRegenPerSec
+		+ (StatsComponent ? StatsComponent->GetStat(EOryxStat::ManaRegen) : 0.f);
+	if (CurrentMana < MaxMn && ManaRate > 0.f
 	    && (Now - LastManaUseTime) >= ManaRegenDelay)
 	{
-		CurrentMana = FMath::Min(MaxMn, CurrentMana + ManaRegenPerSec * DeltaSeconds);
+		CurrentMana = FMath::Min(MaxMn, CurrentMana + ManaRate * DeltaSeconds);
+	}
+
+	// Health regen — purely stat-driven (no base UPROPERTY). HP/sec applied while alive and below max.
+	if (StatsComponent && HealthComponent && !HealthComponent->IsDead())
+	{
+		const float HealthRate = StatsComponent->GetStat(EOryxStat::HealthRegen);
+		if (HealthRate > 0.f
+		    && HealthComponent->GetCurrentHealth() < HealthComponent->GetMaxHealth())
+		{
+			HealthComponent->ApplyHealing(HealthRate * DeltaSeconds);
+		}
 	}
 }
 

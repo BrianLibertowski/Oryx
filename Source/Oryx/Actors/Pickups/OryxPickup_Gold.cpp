@@ -3,6 +3,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Characters/Player/OryxCharacter.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
+#include "Component/Stats/OryxStatsComponent.h"
 #include "EngineUtils.h"
 
 AOryxPickup_Gold::AOryxPickup_Gold()
@@ -54,7 +55,13 @@ void AOryxPickup_Gold::OnSphereOverlap(UPrimitiveComponent*, AActor* OtherActor,
 	// Routes through PlayerState — survives pawn death, replicates per-player in co-op.
 	if (UOryxCurrencyComponent* Currency = Player->GetCurrencyComponent())
 	{
-		Currency->AddGold(Value);
+		float GoldGain = 0.f;
+		if (UOryxStatsComponent* Stats = Player->GetStatsComponent())
+		{
+			GoldGain = Stats->GetStat(EOryxStat::GoldGain);
+		}
+		const int32 Granted = FMath::Max(0, FMath::RoundToInt(Value * (1.f + GoldGain)));
+		Currency->AddGold(Granted);
 		Destroy();
 	}
 	// If currency is null (e.g. PlayerState not yet replicated), don't destroy — let next overlap retry.

@@ -8,7 +8,8 @@ UOryxStatsComponent::UOryxStatsComponent()
 	// BP Class Defaults override these per-class.
 	BaseStats.Add(EOryxStat::MaxHealth, 100.f);
 	BaseStats.Add(EOryxStat::MovementSpeed, 500.f);
-	BaseStats.Add(EOryxStat::Damage, 25.f);
+	// Damage is a global %-bonus multiplier in the formula (0 = no bonus). Items push fractional additive.
+	BaseStats.Add(EOryxStat::Damage, 0.f);
 	BaseStats.Add(EOryxStat::AttackSpeed, 1.0f);
 	BaseStats.Add(EOryxStat::CritChance, 0.05f);          // 5%
 	BaseStats.Add(EOryxStat::CritDamage, 1.5f);           // 150%
@@ -24,6 +25,11 @@ UOryxStatsComponent::UOryxStatsComponent()
 	BaseStats.Add(EOryxStat::CastSpeed, 1.0f);
 	BaseStats.Add(EOryxStat::MaxMana, 100.f);
 	BaseStats.Add(EOryxStat::MaxStamina, 100.f);
+	BaseStats.Add(EOryxStat::HealthRegen, 0.f);
+	BaseStats.Add(EOryxStat::ManaRegen, 0.f);
+	BaseStats.Add(EOryxStat::StaminaRegen, 0.f);
+	BaseStats.Add(EOryxStat::DamageReduction, 0.f);
+	BaseStats.Add(EOryxStat::GoldGain, 0.f);
 }
 
 float UOryxStatsComponent::GetBaseStat(EOryxStat Stat) const

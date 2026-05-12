@@ -84,6 +84,9 @@ void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 			Damage *= (1.f + InstStats->GetStat(EOryxStat::PhysicalPower));
 		}
 
+		// Global Damage stat — fractional %-bonus on top of type bonus, applies to all damage types.
+		Damage *= (1.f + InstStats->GetStat(EOryxStat::Damage));
+
 		// Overflow crit: every full 1.0 of CritChance = guaranteed crit layer; fractional = roll.
 		// Damage multiplied by CritDamage^TotalCrits so 200% crit = double-crit = ×CritDamage^2.
 		const float CritChance = InstStats->GetStat(EOryxStat::CritChance);
@@ -108,6 +111,10 @@ void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 	{
 		const float Armor = TargetStats->GetStat(EOryxStat::Armor);
 		Damage *= FMath::Max(0.f, 1.f - Armor / 100.f);
+
+		// DamageReduction stacks multiplicatively with Armor (e.g. 50 Armor + 0.2 DR → 0.5 × 0.8 = 0.4 dmg).
+		const float DR = TargetStats->GetStat(EOryxStat::DamageReduction);
+		Damage *= FMath::Max(0.f, 1.f - DR);
 	}
 
 	const float FinalDamage = Damage;
