@@ -20,6 +20,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Oryx|Currency")
 	void AddOnyx(int32 Amount);
 
+	/** Atomically spend gold. Returns true if Amount <= current Gold and was deducted; false otherwise (no partial spend). */
+	UFUNCTION(BlueprintCallable, Category = "Oryx|Currency")
+	bool SpendGold(int32 Amount);
+
+	UFUNCTION(BlueprintPure, Category = "Oryx|Currency")
+	bool CanAfford(int32 Amount) const { return Amount <= 0 || Gold >= Amount; }
+
 	UFUNCTION(BlueprintPure, Category = "Oryx|Currency")
 	int32 GetGold() const { return Gold; }
 
