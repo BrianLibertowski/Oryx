@@ -6,6 +6,8 @@
 #include "Characters/Enemies/Base/OryxEnemy.h"
 #include "Component/Health/OryxHealthComponent.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
+#include "Component/Level/OryxLevelComponent.h"
+#include "States/Player/OryxPlayerState.h"
 #include "Actors/Pickups/OryxRewardPickup.h"
 
 AOryxEncounter::AOryxEncounter()
@@ -132,6 +134,18 @@ void AOryxEncounter::CompleteEncounter()
 			if (UOryxCurrencyComponent* Currency = Recipient->GetCurrencyComponent())
 			{
 				Currency->AddGold(GoldReward);
+			}
+		}
+	}
+
+	// --- XP reward ---
+	if (XPReward > 0 && IsValid(TriggeringPlayer))
+	{
+		if (AOryxPlayerState* PS = TriggeringPlayer->GetPlayerState<AOryxPlayerState>())
+		{
+			if (UOryxLevelComponent* Level = PS->GetLevelComponent())
+			{
+				Level->AddXP(XPReward);
 			}
 		}
 	}

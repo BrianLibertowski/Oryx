@@ -55,6 +55,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Oryx|Encounter|Rewards", meta = (ClampMin = "0"))
 	int32 GoldReward = 0;
 
+	/** XP awarded to the triggering player's LevelComponent on completion. Zero = no XP. */
+	UPROPERTY(EditAnywhere, Category = "Oryx|Encounter|Rewards", meta = (ClampMin = "0"))
+	int32 XPReward = 0;
+
 	/** Reward pickup spawned at completion (interactable — player walks up + presses Interact).
 	 *  Null = no pickup (e.g. totems give gold only). */
 	UPROPERTY(EditAnywhere, Category = "Oryx|Encounter|Rewards")
