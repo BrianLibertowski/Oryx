@@ -7,8 +7,11 @@
 class UOryxCurrencyComponent;
 class UOryxLevelComponent;
 class UOryxInventoryComponent;
+class UOryxSkillTreeComponent;
 class UOryxItem;
 class AOryxVendor;
+
+#include "Characters/OryxClassTypes.h"
 
 /**
  *  Per-player persistent run state.
@@ -34,6 +37,10 @@ public:
 	/** Returns the inventory component. Holds owned items + tracks applied stat modifiers for clean removal. */
 	UFUNCTION(BlueprintPure, Category = "Oryx|PlayerState")
 	UOryxInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	/** Returns the skill tree component. Holds per-class node allocations. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|PlayerState")
+	UOryxSkillTreeComponent* GetSkillTreeComponent() const { return SkillTreeComponent; }
 
 	/**
 	 *  Current stage of the run (1/2/3). Drives item cost/sell value via UOryxItemEconomy.
@@ -62,8 +69,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	/**
+	 *  Bound to LevelComponent.OnLevelUp (per-class signature post Phase 4 refactor).
+	 *  D13 REVOKED: no Onyx grant — handler is now heal-to-full + toast UI hook.
+	 */
 	UFUNCTION()
-	void HandleLevelUp(int32 NewLevel, int32 OnyxAwarded);
+	void HandleLevelUp(EOryxClass ClassEnum, int32 NewLevel);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UOryxCurrencyComponent* CurrencyComponent;
@@ -73,4 +84,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UOryxInventoryComponent* InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxSkillTreeComponent* SkillTreeComponent;
 };

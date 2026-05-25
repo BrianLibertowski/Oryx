@@ -57,7 +57,21 @@ float UOryxStatsComponent::GetStat(EOryxStat Stat) const
 		}
 	}
 
-	return (Base + SumAdditive) * (1.f + SumMultiplicative);
+	float Final = (Base + SumAdditive) * (1.f + SumMultiplicative);
+
+	// Stat caps per D18. CritChance + CritDamage intentionally uncapped (overflow design).
+	// Items priced to discourage over-stacking, not hard cap, for those two.
+	switch (Stat)
+	{
+		case EOryxStat::AttackSpeed:        Final = FMath::Min(Final, 5.0f);   break;
+		case EOryxStat::CooldownReduction:  Final = FMath::Min(Final, 0.75f);  break;
+		case EOryxStat::Armor:              Final = FMath::Min(Final, 100.f);  break;
+		case EOryxStat::MovementSpeed:      Final = FMath::Min(Final, 2000.f); break;
+		case EOryxStat::DamageReduction:    Final = FMath::Min(Final, 0.90f);  break;  // Soft cap to prevent immortality stacking
+		default: break;
+	}
+
+	return Final;
 }
 
 FGuid UOryxStatsComponent::AddModifier(FOryxStatModifier Modifier)

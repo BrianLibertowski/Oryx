@@ -139,13 +139,14 @@ void AOryxEncounter::CompleteEncounter()
 	}
 
 	// --- XP reward ---
+	// Per D17: XP routes to active class only. Constant value regardless of class.
 	if (XPReward > 0 && IsValid(TriggeringPlayer))
 	{
 		if (AOryxPlayerState* PS = TriggeringPlayer->GetPlayerState<AOryxPlayerState>())
 		{
 			if (UOryxLevelComponent* Level = PS->GetLevelComponent())
 			{
-				Level->AddXP(XPReward);
+				Level->AddXPToActiveClass(XPReward);
 			}
 		}
 	}

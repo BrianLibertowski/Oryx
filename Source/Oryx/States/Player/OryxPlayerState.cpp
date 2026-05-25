@@ -2,6 +2,7 @@
 #include "Component/Currency/OryxCurrencyComponent.h"
 #include "Component/Level/OryxLevelComponent.h"
 #include "Component/Inventory/OryxInventoryComponent.h"
+#include "Component/SkillTree/OryxSkillTreeComponent.h"
 #include "Items/OryxItem.h"
 #include "Actors/Vendors/OryxVendor.h"
 
@@ -10,25 +11,24 @@ AOryxPlayerState::AOryxPlayerState()
 	CurrencyComponent = CreateDefaultSubobject<UOryxCurrencyComponent>(TEXT("CurrencyComponent"));
 	LevelComponent = CreateDefaultSubobject<UOryxLevelComponent>(TEXT("LevelComponent"));
 	InventoryComponent = CreateDefaultSubobject<UOryxInventoryComponent>(TEXT("InventoryComponent"));
+	SkillTreeComponent = CreateDefaultSubobject<UOryxSkillTreeComponent>(TEXT("SkillTreeComponent"));
 }
 
 void AOryxPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// D13: each level-up grants Onyx. LevelComponent broadcasts the amount; we route to currency.
 	if (LevelComponent)
 	{
 		LevelComponent->OnLevelUp.AddDynamic(this, &AOryxPlayerState::HandleLevelUp);
 	}
 }
 
-void AOryxPlayerState::HandleLevelUp(int32 /*NewLevel*/, int32 OnyxAwarded)
+void AOryxPlayerState::HandleLevelUp(EOryxClass /*ClassEnum*/, int32 /*NewLevel*/)
 {
-	if (CurrencyComponent && OnyxAwarded > 0)
-	{
-		CurrencyComponent->AddOnyx(OnyxAwarded);
-	}
+	// D13 REVOKED: no Onyx grant. Skill points are awarded inside LevelComponent on the per-class progression struct.
+	// Phase 4 TODO: heal-to-full on level-up + toast UI (BP_OryxCharacter listens to this delegate too,
+	// or we add a HUD-side bind in WBP_PlayerHUD).
 }
 
 bool AOryxPlayerState::RequestBuyItem(UOryxItem* Item, AOryxVendor* Vendor)

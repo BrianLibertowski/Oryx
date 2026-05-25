@@ -77,6 +77,10 @@ public:
     UFUNCTION(BlueprintPure, Category = "Oryx|Combat")
     float GetAttackDamage() const { return AttackDamage; }
 
+    /** Sets the per-swing melee damage. Used by EliteArena to scale elites; safe for BP overrides too. */
+    UFUNCTION(BlueprintCallable, Category = "Oryx|Combat")
+    void SetAttackDamage(float NewDamage) { AttackDamage = FMath::Max(0.f, NewDamage); }
+
     UFUNCTION(BlueprintPure, Category = "Oryx|Combat")
     float GetAttackRange() const { return AttackRange; }
 
