@@ -50,8 +50,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|SkillTree")
 	int32 MaxInvestedInTree = 15;
 
-	/** Helper: look up a node by id. Returns nullptr if not found. */
-	UFUNCTION(BlueprintPure, Category = "Oryx|SkillTree")
+	/**
+	 *  Helper: look up a node by id. Returns nullptr if not found.
+	 *  C++-only (UHT forbids exposing raw USTRUCT pointers to BP). If WBP_SkillTreeScreen needs
+	 *  BP node lookup later, add a sibling `bool FindNodeBP(FName, FOryxSkillNode& OutNode)` accessor.
+	 */
 	const FOryxSkillNode* FindNode(FName NodeId) const;
 
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;

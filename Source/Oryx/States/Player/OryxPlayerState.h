@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Characters/OryxClassTypes.h"
 #include "OryxPlayerState.generated.h"
 
 class UOryxCurrencyComponent;
@@ -11,7 +12,11 @@ class UOryxSkillTreeComponent;
 class UOryxItem;
 class AOryxVendor;
 
-#include "Characters/OryxClassTypes.h"
+/**
+ *  Fires after LevelComponent reports a level-up AND PlayerState has applied side-effects
+ *  (heal-to-full, profile save). BP listens for toast UI / SFX / VFX. BlueprintAssignable.
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerLevelUp, EOryxClass, ClassEnum, int32, NewLevel);
 
 /**
  *  Per-player persistent run state.
@@ -25,6 +30,10 @@ class ORYX_API AOryxPlayerState : public APlayerState
 
 public:
 	AOryxPlayerState();
+
+	/** Public level-up hook — fires after heal-to-full + profile save. BP binds for toast UI. */
+	UPROPERTY(BlueprintAssignable, Category = "Oryx|PlayerState")
+	FOnPlayerLevelUp OnPlayerLevelUp;
 
 	/** Returns the currency component owned by this player state */
 	UFUNCTION(BlueprintPure, Category = "Oryx|PlayerState")

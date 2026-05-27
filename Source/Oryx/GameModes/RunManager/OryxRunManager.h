@@ -92,4 +92,11 @@ protected:
 
 	/** Internal transition helper — sets state + broadcasts. No-op if same state. */
 	void SetRunState(EOryxRunState NewState);
+
+	/**
+	 *  Persists the (first) player's profile to disk and deletes the mid-run save slot.
+	 *  Called from HandlePlayerDeath / HandleExtract — anything that ends the run.
+	 *  Single-player demo: takes the first AOryxPlayerState. Co-op pass: iterate all + save each.
+	 */
+	void PersistProfileAndCleanupRun();
 };

@@ -80,6 +80,10 @@ protected:
 	UFUNCTION()
 	void HandleBossDamaged(float NewHealth, float DamageAmount);
 
+	/** Bound to HealthComponent::OnDeath in BeginPlay. Notifies the RunManager so the stage-cleared flow can fire. */
+	UFUNCTION()
+	void HandleBossDied(AActor* DeadActor);
+
 	UFUNCTION()
 	void FinishTelegraphedAttack();
 

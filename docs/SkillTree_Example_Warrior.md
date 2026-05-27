@@ -1,133 +1,181 @@
-# Skill Tree Authoring Example — Warrior Passive (Demo, 20 nodes)
+# Skill Tree Authoring Example — Warrior (D21 — 5 trees, demo)
 
-Concrete reference for authoring a `UOryxSkillTree` DataAsset. Use this as a copy-and-modify template for the other 23 trees (4 classes × (1 passive + 5 ability) − 1 = 23).
+> **Refactored 2026-05-26 to match D21.** Previous version was authored against D14 (1 linear passive + 5 ability cluster trees = 6 total). D21 collapses to **5 trees per class**, no separate passive — each tree is built around one of the class's 5 anchor abilities, with passive modifier nodes that buff/modify that ability or the class's general stats.
+>
+> The C++ machinery is unchanged:
+> - `UOryxSkillTree.TreeType` still has Passive + Ability enum options — just author all 5 as `Ability` for D21 (`Passive` is a legacy option from D14 days; safe to leave declared).
+> - `MaxInvestedInTree` stays 15 (D14 spec retained — keeps you from maxing every node and forces choices).
+> - `bIsBaseAbility` flag on the center node = ability granted free.
+> - `MaxRanks` per node retained (3 ranks per modifier node, stepped values).
+>
+> Use this Warrior doc as a template. Pattern carries to Archer / Assassin / Mage with their own ability lists.
 
-## DataAsset Setup
+---
 
-Create at `/Game/SkillTrees/Warrior/Passive_WarriorMain`:
+## The 5 Warrior Trees
+
+| # | Tree | Anchor Ability (free center node) | Theme |
+|---|---|---|---|
+| 1 | **Cleave Mastery** | `Ability_Cleave` (sword swing primary) | Crit, attack speed, basic-attack scaling |
+| 2 | **Heavy Strike** | `Ability_HeavyStrike` (telegraphed slow swing) | Burst damage, knockback, single-target |
+| 3 | **Battle Rush** | `Ability_BattleRush` (charge/dash with impact) | Mobility, charge damage, gap-closer utility |
+| 4 | **War Cry** | `Ability_WarCry` (AoE buff/debuff shout) | Group buffs, debuffs on enemies, sustain |
+| 5 | **Bulwark** | `Ability_ShieldStance` (defensive stance/block) | Armor, damage reduction, MaxHealth |
+
+Each tree:
+- 10 nodes total (1 center + 9 modifiers)
+- Center = `bIsBaseAbility = true`, MaxRanks = 1, no cost (granted free)
+- 9 modifier nodes × 3 ranks each = 27 ranks per tree
+- `MaxInvestedInTree` = 15 → can't fully max every modifier; forces ~5 nodes maxed or wider shallow spread
+
+Total Warrior demo content: 5 trees × ~9 modifier nodes = 45 unique modifier nodes. Level 20 demo cap means a Warrior has 19 ability points (1 ability point per 2 levels per D14) — barely enough to fill 1.25 trees. Players pick which 1-2 trees to specialize in.
+
+---
+
+## DataAsset Setup (per tree)
+
+Create each at `/Game/SkillTrees/Warrior/<TreeName>`:
+
+```
+/Game/SkillTrees/Warrior/
+├── Tree_Cleave.uasset
+├── Tree_HeavyStrike.uasset
+├── Tree_BattleRush.uasset
+├── Tree_WarCry.uasset
+└── Tree_Bulwark.uasset
+```
+
+For each `UOryxSkillTree` asset:
 - **OwningClass** = `Warrior`
-- **TreeType** = `Passive`
-- **TreeName** = `"Warrior Mastery"`
-- **MaxInvestedInTree** = `20` (full demo passive tree)
+- **TreeType** = `Ability`
+- **TreeName** = display name (e.g. "Cleave Mastery")
+- **MaxInvestedInTree** = `15`
 
-## Linear Passive Tree Structure (20 nodes)
+---
 
-Nodes flow left-to-right with branching at tiers. Each node has 1 rank unless noted.
+## Tree 1 — Cleave Mastery (FULL SPEC — template for the other 4)
 
-### Tier 1 — Foundation (no prereqs)
+### Center node — free, `bIsBaseAbility = true`
 
-| NodeId | DisplayName | Modifier | Required Points | Required Nodes |
+| NodeId | DisplayName | Description | MaxRanks | Modifier |
 |---|---|---|---|---|
-| `Warrior_Pass_01_Health` | Hardy | `+25 MaxHealth (Additive)` | 0 | (none) |
-| `Warrior_Pass_02_Armor` | Stalwart | `+10 Armor (Additive)` | 0 | (none) |
+| `War_Cleave_00_Ability` | Cleave | Wide sword swing in front. Base melee. | 1 | (none — ability grant only) |
 
-### Tier 2 — Specialise (need 2 points in tree)
+### Tier 1 — Foundation (0 points in tree required)
 
-| NodeId | DisplayName | Modifier | Required Points | Required Nodes |
+| NodeId | DisplayName | MaxRanks | Modifier per rank | RequiredNodes |
 |---|---|---|---|---|
-| `Warrior_Pass_03_PhysPower` | Brute Strength | `+10% PhysicalPower (Additive)` | 2 | (none) |
-| `Warrior_Pass_04_AttackSpeed` | Swift Cuts | `+5% AttackSpeed (Multiplicative)` | 2 | (none) |
-| `Warrior_Pass_05_CritChance` | Killing Edge | `+5% CritChance (Additive)` | 2 | (none) |
+| `War_Cleave_01_AtkSpd` | Swift Cuts | 3 | `+0.10 AttackSpeed (Additive)` | `War_Cleave_00_Ability` |
+| `War_Cleave_02_PhysPower` | Brute Force | 3 | `+0.05 PhysicalPower (Additive)` | `War_Cleave_00_Ability` |
 
-### Tier 3 — Branch left (combat) (need 4 points in tree)
+### Tier 2 — Specialize (2 points in tree required)
 
-| NodeId | DisplayName | Modifier | Required Points | Required Nodes |
+| NodeId | DisplayName | MaxRanks | Modifier per rank | RequiredNodes |
 |---|---|---|---|---|
-| `Warrior_Pass_06_HealthBig` | Resilience | `+50 MaxHealth (Additive)` | 4 | `Warrior_Pass_01_Health` |
-| `Warrior_Pass_07_PhysPowerBig` | Heavy Hands | `+15% PhysicalPower (Additive)` | 4 | `Warrior_Pass_03_PhysPower` |
-| `Warrior_Pass_08_CritDmg` | Devastate | `+10% CritDamage (Additive)` | 4 | `Warrior_Pass_05_CritChance` |
+| `War_Cleave_03_CritChance` | Killing Edge | 3 | `+0.04 CritChance (Additive)` | `War_Cleave_01_AtkSpd` |
+| `War_Cleave_04_Damage` | Onslaught | 3 | `+0.05 Damage (Additive)` | `War_Cleave_02_PhysPower` |
+| `War_Cleave_05_Armor` | Stalwart | 3 | `+5 Armor (Additive)` | `War_Cleave_00_Ability` |
 
-### Tier 3 — Branch right (defense) (need 4 points in tree)
+### Tier 3 — Mid-tier (5 points in tree required)
 
-| NodeId | DisplayName | Modifier | Required Points | Required Nodes |
+| NodeId | DisplayName | MaxRanks | Modifier per rank | RequiredNodes |
 |---|---|---|---|---|
-| `Warrior_Pass_09_ArmorBig` | Iron Skin | `+15 Armor (Additive)` | 4 | `Warrior_Pass_02_Armor` |
-| `Warrior_Pass_10_DR` | Damage Reduction | `+5% DamageReduction (Additive)` | 4 | `Warrior_Pass_02_Armor` |
+| `War_Cleave_06_CritDmg` | Devastate | 3 | `+0.10 CritDamage (Additive)` | `War_Cleave_03_CritChance` |
+| `War_Cleave_07_Health` | Hardy | 3 | `+25 MaxHealth (Additive)` | `War_Cleave_05_Armor` |
 
-### Tier 4 — Hybrid (need 7 points in tree)
+### Tier 4 — Capstone-adjacent (10 points in tree required)
 
-| NodeId | DisplayName | Modifier | Required Points | Required Nodes |
+| NodeId | DisplayName | MaxRanks | Modifier per rank | RequiredNodes |
 |---|---|---|---|---|
-| `Warrior_Pass_11_HealthRegen` | Vitality | `+3 HealthRegen (Additive)` | 7 | `Warrior_Pass_06_HealthBig` |
-| `Warrior_Pass_12_CDR` | Battle Rhythm | `+5% CooldownReduction (Additive)` | 7 | `Warrior_Pass_07_PhysPowerBig` |
-| `Warrior_Pass_13_Damage` | Onslaught | `+10% Damage (Additive)` | 7 | `Warrior_Pass_08_CritDmg` |
+| `War_Cleave_08_Frenzy` | Frenzy | 3 | `+0.08 AttackSpeed (Multiplicative)` | `War_Cleave_06_CritDmg` AND `War_Cleave_04_Damage` |
+| `War_Cleave_09_Executioner` | Executioner | 3 | `+0.15 CritDamage (Additive)` | `War_Cleave_06_CritDmg` |
 
-### Tier 5 — Capstone-adjacent (need 11 points in tree)
+### Investment shapes (level 20 — 19 ability points)
 
-| NodeId | DisplayName | Modifier | Required Points | Required Nodes |
-|---|---|---|---|---|
-| `Warrior_Pass_14_HealthHuge` | Bulwark | `+100 MaxHealth (Additive)` | 11 | `Warrior_Pass_11_HealthRegen` |
-| `Warrior_Pass_15_CritChanceBig` | Headhunter | `+10% CritChance (Additive)` | 11 | `Warrior_Pass_12_CDR` |
-| `Warrior_Pass_16_AttackSpeedBig` | Frenzy | `+10% AttackSpeed (Multiplicative)` | 11 | `Warrior_Pass_13_Damage` |
+- **Pure DPS:** 01×3 + 02×3 + 03×3 + 06×3 + 08×3 = 15 points → high attack speed + crit chance + crit damage stacking
+- **Hybrid:** 01×3 + 02×3 + 04×3 + 05×3 + 07×3 = 15 points → balanced damage + survival
+- **Off-pick:** spend ~5 points here, rest in another tree (e.g. Bulwark for defense)
 
-### Tier 6 — Pre-capstone (need 15 points in tree)
+---
 
-| NodeId | DisplayName | Modifier | Required Points | Required Nodes |
-|---|---|---|---|---|
-| `Warrior_Pass_17_ArmorHuge` | Mountain | `+25 Armor (Additive)` | 15 | `Warrior_Pass_09_ArmorBig` AND `Warrior_Pass_10_DR` |
-| `Warrior_Pass_18_PhysPowerHuge` | Hammer Strike | `+25% PhysicalPower (Additive)` | 15 | `Warrior_Pass_14_HealthHuge` OR `Warrior_Pass_16_AttackSpeedBig` |
-| `Warrior_Pass_19_CritDmgHuge` | Executioner | `+25% CritDamage (Additive)` | 15 | `Warrior_Pass_15_CritChanceBig` |
+## Tree 2 — Heavy Strike (skeleton)
 
-### Tier 7 — Capstone (need 18 points in tree, AND 2 specific prereqs)
+- Center: `War_HS_00_Ability` (telegraphed slow heavy swing, 1.5× cleave damage)
+- Modifier nodes scale damage / knockback / mana cost / windup duration / area / crit on heavy
+- Suggested nodes: HeavyStrikeDamage / HeavyStrikeKnockback / FasterWindup / HeavyCritChance / HeavyCritDamage / HeavyAOE / DamageStacking / PhysPower / MaxHealth
 
-| NodeId | DisplayName | Modifier | Required Points | Required Nodes |
-|---|---|---|---|---|
-| `Warrior_Pass_20_Capstone` | Apex Warrior | `+50 MaxHealth + +15% PhysicalPower + +10% AttackSpeed` (multi-modifier node) | 18 | `Warrior_Pass_17_ArmorHuge` AND `Warrior_Pass_19_CritDmgHuge` |
+## Tree 3 — Battle Rush (skeleton)
 
-> **Note:** Multi-modifier nodes — set `ModifiersPerRank[0]` to be an array of 3 entries (a single rank with 3 stat changes). Each rank applies all its modifiers.
+- Center: `War_BR_00_Ability` (charge that knocks enemies + i-frames)
+- Modifier nodes: ChargeDamage / LongerCharge / FasterCooldown / MovementSpeed / Stamina / DamageWhileMoving / GapCloserAOE / DashImpactArmor / ChargeKnockbackStrength
 
-## Authoring Workflow in Editor
+## Tree 4 — War Cry (skeleton)
 
-For each node:
+- Center: `War_WC_00_Ability` (AoE buff: +damage to nearby + debuff: -armor on enemies)
+- Modifier nodes: WarCryRadius / DamageBuff / ArmorDebuff / DurationExtend / CooldownReduction / WarCryHealing / WarCryCritBuff / HealthRegen / Vitality
 
-1. Open `Passive_WarriorMain.uasset` in Content Browser.
+## Tree 5 — Bulwark (skeleton)
+
+- Center: `War_BW_00_Ability` (Shield Stance — 50% damage reduction while active, slow movement)
+- Modifier nodes: ArmorPassive / DR / MaxHealthBig / HealthRegen / DamageReflect / ShieldDurability / ShieldRange / TauntPassive / SturdyStance
+
+> Each skeleton tree follows the same 10-node shape as Cleave Mastery: 1 free center + 2 foundation nodes + 3 specialize + 2 mid + 2 capstone. Copy the Cleave structure, swap NodeIds + display names + modifier choices.
+
+---
+
+## Authoring Workflow in Editor (per node)
+
+1. Open `Tree_<Name>.uasset` in Content Browser.
 2. Scroll to **Nodes** array → +Add.
-3. Fill in `NodeId` exactly as listed (these get referenced by other nodes via RequiredNodes).
-4. Set `DisplayName` and `Description` (player-facing).
-5. Set `MaxRanks` (default 1 for passive tree; multi-rank only for ability trees).
-6. **RequiredNodes** array → add the prereq NodeIds (use FName matches).
-7. **RequiredPointsInTree** → soft-gate threshold.
-8. **ModifiersPerRank** → add one FOryxStatModifier per rank:
+3. Fill in `NodeId` exactly as listed in this doc (other nodes reference these via RequiredNodes — typos break the graph silently).
+4. Set `DisplayName` + `Description` (player-facing).
+5. Set `MaxRanks` (1 for center ability node, 3 for modifier nodes).
+6. **RequiredNodes** array → add prereq NodeIds (FName matches — copy-paste to avoid typos).
+7. **RequiredPointsInTree** → the tier soft-gate (0, 2, 5, or 10 for the 4 tiers).
+8. **ModifiersPerRank** → one `FOryxStatModifier` entry per rank. For stepped values, all 3 rank entries hold the SAME value (rank 1 = +0.10 AS, rank 2 cumulative = +0.20, etc — the C++ stat aggregator sums modifiers).
    - Stat (enum)
    - Op (Additive / Multiplicative)
    - Value (e.g. 25 for +25 Health, 0.10 for +10%)
-9. Compile + Save asset.
+9. For the center node: leave `ModifiersPerRank` empty, set `bIsBaseAbility = true`.
+10. Compile + Save asset.
 
-## Ability Tree Template Notes
+## Tree Registry (required for save-load skill rehydration)
 
-Ability trees differ:
-- **10 nodes × 3 ranks = 30 ranks total per tree**
-- **Cluster shape** (visualized in WBP_SkillTreeScreen) — center node is `bIsBaseAbility = true`, granted free
-- **MaxInvestedInTree = 15** (so you can't max out every node)
-- Use stepped values: each rank of a node contributes the same amount (e.g. node says "+5% damage" — rank 1 = +5%, rank 2 = +10% cumulative, rank 3 = +15% cumulative). Implement this by putting the same value in each `ModifiersPerRank` entry.
+`UOryxGameInstance` will need a `TArray<UOryxSkillTree*> RegisteredSkillTrees` UPROPERTY (configured per-asset on BP_OryxGameInstance) so the load path can walk allocated NodeRanks and re-push stat modifiers. **Not yet wired** — flagged in bugs.md as `[Medium]` follow-up. Until then, the demo persists XP/Level/UnallocatedPoints/NodeRanks data correctly, but the stat-modifier side of allocated nodes only goes live when the player re-invests in the editor session.
 
-## Estimated Authoring Time
+---
 
-- 1 passive tree = ~1 hour to fully spec + enter in editor
-- 1 ability tree = ~30 min (smaller, more rank repetition)
-- Per class: 1 passive + 5 ability = ~3.5 hours
-- All 4 classes: ~14 hours
+## Estimated Authoring Time (D21-revised)
 
-W6 has Mon-Sun to author. Should fit comfortably.
+- 1 ability tree fully spec'd in editor = ~40 min (modifier choices + RequiredNodes linkage takes time)
+- Per class: 5 trees = ~3.5 hours
+- All 4 classes: ~14 hours (unchanged from D14 estimate)
+- **If demo ships Warrior-only:** ~3.5 hours of authoring work, not 14.
+
+W6 has Mon-Sun to author — fits comfortably either way. Warrior-first is the recommended approach since it's the floor for Jul 15.
+
+---
 
 ## Balance Targets (Demo-Tuned)
 
-- Passive tree fully invested (20 points = level 20) should grant roughly:
-  - +200 MaxHealth (so a Warrior at level 20 has ~350 HP base + passive = ~550 from this tree alone)
-  - +50% PhysicalPower
-  - +15% AttackSpeed
-  - +50 Armor (capped at 100)
-  - +15% CritChance
-  - +35% CritDamage
-- This is intentional — Warrior at max passive should feel meaningfully stronger than at level 1. Items + cards layer on top.
-- Validate during W8 combat tuning playtest.
+Warrior at level 20 with 19 ability points spent across trees should feel meaningfully stronger than level 1. Rough targets:
+
+- **Pure Cleave spec (DPS) at level 20:** +0.30 AttackSpeed + 15% PhysicalPower + 12% CritChance + 30% CritDamage stacking → roughly 2.5× base DPS
+- **Hybrid (Cleave + Bulwark):** ~1.8× DPS + +75 Armor + +50 MaxHealth → noticeably tankier
+- **Multi-ability spec (5 points per tree):** broader utility, ~1.5× DPS but more abilities feel viable
+
+Validate during W8 combat tuning playtest. If 19 points produces a power spike too large, reduce per-rank values uniformly (e.g. 0.10 AttackSpeed → 0.07).
+
+---
 
 ## Quick Reference — All Stats Available
 
 Available `EOryxStat` values (23 total per Phase 4 expansion):
-- **HP/MP/Stamina**: MaxHealth, MaxMana, MaxStamina, HealthRegen, ManaRegen, StaminaRegen
-- **Damage**: Damage (global), PhysicalPower, FireDamage, ColdDamage, MagicDamage, CurseDamage, PoisonDamage
-- **Combat tempo**: AttackSpeed, CastSpeed, CooldownReduction
-- **Crits**: CritChance, CritDamage
-- **Defense**: Armor, DamageReduction
-- **Misc**: MovementSpeed, Luck, GoldGain
+- **HP/MP/Stamina:** MaxHealth, MaxMana, MaxStamina, HealthRegen, ManaRegen, StaminaRegen
+- **Damage:** Damage (global), PhysicalPower, FireDamage, ColdDamage, MagicDamage, CurseDamage, PoisonDamage
+- **Combat tempo:** AttackSpeed, CastSpeed, CooldownReduction
+- **Crits:** CritChance, CritDamage
+- **Defense:** Armor, DamageReduction
+- **Misc:** MovementSpeed, Luck, GoldGain
+
+Stat caps (D18): AttackSpeed=5.0, CooldownReduction=0.75, Armor=100, MovementSpeed=2000, DamageReduction=0.90 (soft). CritChance/CritDamage uncapped (overflow per design).

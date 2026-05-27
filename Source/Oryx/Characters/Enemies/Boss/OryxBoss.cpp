@@ -1,5 +1,6 @@
 #include "OryxBoss.h"
 #include "Component/Health/OryxHealthComponent.h"
+#include "GameModes/RunManager/OryxRunManager.h"
 #include "TimerManager.h"
 
 AOryxBoss::AOryxBoss()
@@ -19,6 +20,20 @@ void AOryxBoss::BeginPlay()
 	if (UOryxHealthComponent* HC = FindComponentByClass<UOryxHealthComponent>())
 	{
 		HC->OnDamaged.AddDynamic(this, &AOryxBoss::HandleBossDamaged);
+		// Note: Super (AOryxEnemy) also binds its own HandleDeath for the cleanup/loot path.
+		// Boss-specific RunManager notification rides alongside it.
+		HC->OnDeath.AddDynamic(this, &AOryxBoss::HandleBossDied);
+	}
+}
+
+void AOryxBoss::HandleBossDied(AActor* /*DeadActor*/)
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (AOryxRunManager* RM = World->GetGameState<AOryxRunManager>())
+		{
+			RM->HandleBossDefeated();
+		}
 	}
 }
 

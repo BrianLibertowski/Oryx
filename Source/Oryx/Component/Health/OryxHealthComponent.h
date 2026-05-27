@@ -59,6 +59,20 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Oryx|Health")
 	bool IsDead() const { return bIsDead; }
 
+	/**
+	 *  The actor whose ApplyDamageEvent landed the most recent successful hit on this component
+	 *  (post-formula, post-armor — only set when FinalDamage > 0 was actually applied).
+	 *
+	 *  Co-op proofing: used by AOryxEnemy::HandleDeath to credit XP to the actual killer instead
+	 *  of guessing via TActorIterator. Also used by HandleDamaged to spread aggro toward the
+	 *  real damage dealer.
+	 *
+	 *  Weak pointer — survives the instigator going out of scope (cleanup-safe).
+	 *  Cleared when bIsDead transitions to true (death event has already broadcast at that point).
+	 */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Health")
+	AActor* GetLastInstigator() const { return LastInstigator.Get(); }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -79,4 +93,7 @@ private:
 	/** Cached on BeginPlay; null for owners without stats (enemies). */
 	UPROPERTY(Transient)
 	UOryxStatsComponent* StatsComp = nullptr;
+
+	/** Co-op proofing: weak ref to whoever last damaged this owner. See GetLastInstigator(). */
+	TWeakObjectPtr<AActor> LastInstigator;
 };

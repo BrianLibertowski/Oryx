@@ -15,6 +15,7 @@
 #include "Component/Stats/OryxStatsComponent.h"
 #include "Component/StatusEffects/OryxStatusEffectsComponent.h"
 #include "States/Player/OryxPlayerState.h"
+#include "GameModes/RunManager/OryxRunManager.h"
 
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
@@ -500,6 +501,21 @@ void AOryxCharacter::HandleDeath(AActor* DeadActor)
 			GameOverWidget->AddToViewport();
 			PC->SetShowMouseCursor(true);
 			PC->SetInputMode(FInputModeUIOnly());
+		}
+	}
+
+	// Notify the RunManager so it can transition to Dead state + trigger profile save / RunSave cleanup.
+	// Per D19 (solo death = run ends); co-op revive shrine deferred.
+	// Gate on player-control: a future AI-controlled AOryxCharacter (e.g. companion subclass)
+	// dying must NOT end the run.
+	if (IsPlayerControlled())
+	{
+		if (UWorld* World = GetWorld())
+		{
+			if (AOryxRunManager* RM = World->GetGameState<AOryxRunManager>())
+			{
+				RM->HandlePlayerDeath();
+			}
 		}
 	}
 }

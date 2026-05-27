@@ -9,7 +9,8 @@ Treat each `.md` here as the source of truth for its topic. Update inline when s
 ## Index
 
 ### Process / Planning
-- **[CompileChecklist.md](CompileChecklist.md)** — pre-compile sanity + paths (Live Coding → IDE build → UBT) + expected error catalog + post-compile verification.
+- **[CompileChecklist.md](CompileChecklist.md)** — pre-compile sanity + paths (Live Coding → IDE build → UBT) + expected error catalog + post-compile verification. Includes "Second compile (post-wiring batch)" + audit fix + settings scaffold sections from 2026-05-26.
+- **[Settings_BPConsumption.md](Settings_BPConsumption.md)** — BP wire-up reference for `UOryxGameUserSettings`. Per-setting pattern, live consumer recipe (HUD opacity / FOV / screen shake / blood toggle), defaults rationale, recipe for adding new settings.
 
 ### Handoff Briefs (W10 — Outsource Pipeline)
 
@@ -24,7 +25,7 @@ These get sent to outsource artists once funded. Drafted ahead so the actual W10
 - **[Handoff_Environment.md](Handoff_Environment.md)** — Wild Plains map placement spec (spawn / 3 vendors / 3-5 chests / 20-30 totems / 2-3 outposts / 1-2 elite arenas / boss arena), navmesh / lighting / foliage / performance.
 
 ### Content Authoring References
-- **[SkillTree_Example_Warrior.md](SkillTree_Example_Warrior.md)** — Concrete 20-node passive tree spec for Warrior. Use as copy-modify template for other classes. NOTE: written for OLD D14 (1 passive + 5 ability). Under D21 (Option A) the simplification is: 5 skill trees per class total, no separate passive tree. Use the modifier patterns + balance targets here but reorganise into 5 trees.
+- **[SkillTree_Example_Warrior.md](SkillTree_Example_Warrior.md)** — D21 spec (5 trees per class, no separate passive). One tree fully spec'd (Cleave Mastery), other 4 skeleton'd. Refactored 2026-05-26 from old D14 (6 trees).
 - **[OnboardingHints.md](OnboardingHints.md)** — 17 first-30-second hints with exact text + trigger conditions. Implementation pattern + style guide.
 
 ### Gameplay Design Specs (added 2026-05-25)
@@ -57,7 +58,8 @@ These get sent to outsource artists once funded. Drafted ahead so the actual W10
 | Handoff_UI.md | Full draft, awaiting contact info |
 | Handoff_Environment.md | Full draft, awaiting contact info |
 | CompileChecklist.md | Ready for tomorrow's compile pass |
-| SkillTree_Example_Warrior.md | Full Warrior passive spec — template for other 23 trees |
+| SkillTree_Example_Warrior.md | D21-refactored: Cleave Mastery fully spec'd + 4 skeletons. Template for other 3 classes. |
+| Settings_BPConsumption.md | Full BP wire-up reference for the expanded UOryxGameUserSettings scaffold. |
 | OnboardingHints.md | 17 hints scripted, awaiting WBP_HintOverlay implementation |
 | PitchDeck_Outline.md | 12-slide content, awaiting deck assembly |
 | Kickstarter_Draft.md | Full long-form draft, awaiting media embeds |

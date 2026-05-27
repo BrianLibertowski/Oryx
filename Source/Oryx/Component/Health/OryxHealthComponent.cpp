@@ -123,6 +123,10 @@ void UOryxHealthComponent::ApplyDamageEvent(FOryxDamageEvent Event)
 	const float Max = GetMaxHealth();
 	CurrentHealth = FMath::Clamp(CurrentHealth - FinalDamage, 0.f, Max);
 
+	// Co-op proofing: capture the killer/attacker so downstream death/damage handlers can credit
+	// the right player without guessing via TActorIterator.
+	LastInstigator = Event.Instigator;
+
 	UE_LOG(LogTemp, Log,
 		TEXT("%s took %.1f damage. Health: %.1f / %.1f"),
 		*GetOwner()->GetName(), FinalDamage, CurrentHealth, Max);

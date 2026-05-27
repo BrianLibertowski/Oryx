@@ -38,6 +38,13 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Oryx|Loot")
     int32 GoldDropValue = 1;
 
+    /**
+     *  XP granted to the player's active class on death (per D17 — constant regardless of class).
+     *  Per plan curve: grunt 5, runner 4, tank 8, elite ~25, boss ~150. Configurable per BP_Enemy_*.
+     */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Oryx|Loot")
+    int32 XPReward = 5;
+
     // --- Combat ---
 
     /** Damage dealt per melee swing. Read by BTT_MeleeAttack. */
