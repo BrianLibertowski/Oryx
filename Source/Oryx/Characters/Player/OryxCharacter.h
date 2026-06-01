@@ -20,6 +20,14 @@ class UUserWidget;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 /**
+ *  Fired whenever the player's "currently closest interactable in range" changes.
+ *  Listeners (UOryxInteractPromptComponent on each interactable actor) use this to
+ *  toggle their "Press F" prompt widget. NewInteractable is null when the player has
+ *  walked out of range of any interactable.
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, AActor*, NewInteractable);
+
+/**
  *  A simple player-controllable third person character
  *  Implements a controllable orbiting camera
  */
@@ -96,9 +104,24 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* ToggleMenuAction;
 
-	/** Forward distance the interact trace reaches (cm) */
+	/** Forward distance the interact trace reaches (cm). DEPRECATED — proximity-based interact replaced the line trace. Kept as a fallback knob in case we want long-range aim-trace interaction later. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Interact")
 	float InteractTraceDistance = 250.f;
+
+	/**
+	 *  Radius (cm) within which an interactable becomes the player's "current" target. The closest
+	 *  IOryxInteractable inside this radius is picked — no facing requirement. Smaller = stricter
+	 *  proximity; larger = more forgiving.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Interact")
+	float InteractRadius = 250.f;
+
+	/**
+	 *  How often (seconds) the nearest-interactable poll runs from Tick. 10Hz (0.1s) is plenty for
+	 *  walking speed; if you sprint very fast through dense interactables, consider 0.05s.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Interact")
+	float InteractScanInterval = 0.1f;
 
 	// Stamina
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Stats")
@@ -170,9 +193,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoDash();
 
-	/** Handles interact input — line-traces forward and calls IOryxInteractable::Interact on the hit */
+	/** Handles interact input — proximity-based: calls IOryxInteractable::Interact on whichever
+	 *  interactable is currently closest (within InteractRadius). See UpdateNearestInteractable. */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoInteract();
+
+	/** Returns the currently closest in-range interactable, or null if none. */
+	UFUNCTION(BlueprintPure, Category = "Oryx|Interact")
+	AActor* GetCurrentInteractable() const { return CurrentInteractable.Get(); }
+
+	/** Broadcasts when the closest in-range interactable changes. UOryxInteractPromptComponent binds. */
+	UPROPERTY(BlueprintAssignable, Category = "Oryx|Interact")
+	FOnInteractableChanged OnInteractableChanged;
 
 	/** Fires when ToggleStatsAction is pressed. BP_OryxCharacter implements widget show/hide. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Oryx|UI")
@@ -326,4 +358,14 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Oryx|Resources")
 	float LastManaUseTime = -1000.f;
+
+	/** Cached closest IOryxInteractable in range. Updated by UpdateNearestInteractable. */
+	UPROPERTY(Transient)
+	TWeakObjectPtr<AActor> CurrentInteractable;
+
+	/** Tick accumulator for the InteractScanInterval-paced poll. */
+	float InteractScanAccumulator = 0.f;
+
+	/** Iterates IOryxInteractable actors in InteractRadius, picks closest, broadcasts if changed. */
+	void UpdateNearestInteractable();
 };

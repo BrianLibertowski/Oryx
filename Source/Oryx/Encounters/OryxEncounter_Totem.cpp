@@ -2,12 +2,15 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Characters/Player/OryxCharacter.h"
+#include "Component/InteractPrompt/OryxInteractPromptComponent.h"
 
 AOryxEncounter_Totem::AOryxEncounter_Totem()
 {
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 	RootComponent = MeshComponent;
+
+	InteractPromptComponent = CreateDefaultSubobject<UOryxInteractPromptComponent>(TEXT("InteractPromptComponent"));
 }
 
 void AOryxEncounter_Totem::BeginPlay()

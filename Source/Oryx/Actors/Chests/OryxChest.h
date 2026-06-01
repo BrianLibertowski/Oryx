@@ -10,6 +10,7 @@ class USphereComponent;
 class UStaticMeshComponent;
 class UOryxItem;
 class AOryxCharacter;
+class UOryxInteractPromptComponent;
 
 /**
  *  Stationary chest. Player interacts → spends gold (cost by stage per D10) →
@@ -68,6 +69,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshComponent;
+
+	/** Floating "F" prompt — auto shows/hides based on player proximity. Set PromptWidgetClass in BP. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxInteractPromptComponent* InteractPromptComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "Oryx|Chest|State")
 	bool bOpened = false;

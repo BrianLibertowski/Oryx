@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 
 #include "Characters/Player/OryxCharacter.h"
+#include "Component/InteractPrompt/OryxInteractPromptComponent.h"
 
 AOryxRewardPickup::AOryxRewardPickup()
 {
@@ -19,6 +20,8 @@ AOryxRewardPickup::AOryxRewardPickup()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(RootComponent);
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	InteractPromptComponent = CreateDefaultSubobject<UOryxInteractPromptComponent>(TEXT("InteractPromptComponent"));
 }
 
 void AOryxRewardPickup::Interact_Implementation(AOryxCharacter* Interactor)

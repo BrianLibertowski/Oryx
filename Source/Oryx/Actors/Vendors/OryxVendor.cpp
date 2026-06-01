@@ -3,6 +3,7 @@
 #include "Items/OryxItemTypes.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Component/InteractPrompt/OryxInteractPromptComponent.h"
 
 AOryxVendor::AOryxVendor()
 {
@@ -14,6 +15,8 @@ AOryxVendor::AOryxVendor()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(RootComponent);
+
+	InteractPromptComponent = CreateDefaultSubobject<UOryxInteractPromptComponent>(TEXT("InteractPromptComponent"));
 }
 
 void AOryxVendor::BeginPlay()

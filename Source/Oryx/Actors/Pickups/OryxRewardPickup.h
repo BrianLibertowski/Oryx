@@ -8,6 +8,7 @@
 class UStaticMeshComponent;
 class USphereComponent;
 class UUserWidget;
+class UOryxInteractPromptComponent;
 
 /**
  *  Spawned by AOryxEncounter on completion. Sits in the world as an interactable.
@@ -36,4 +37,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshComponent;
+
+	/** Floating "F" prompt — auto shows/hides based on player proximity. Set PromptWidgetClass in BP. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxInteractPromptComponent* InteractPromptComponent;
 };

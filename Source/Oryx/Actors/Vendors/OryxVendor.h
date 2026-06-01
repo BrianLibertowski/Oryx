@@ -9,6 +9,7 @@ class UOryxItem;
 class UStaticMeshComponent;
 class USphereComponent;
 class UUserWidget;
+class UOryxInteractPromptComponent;
 
 /** A single rolled stock entry — what's on the rack. */
 USTRUCT(BlueprintType)
@@ -76,6 +77,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Mesh;
+
+	/** Floating "F" prompt — auto shows/hides based on player proximity. Set PromptWidgetClass in BP. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UOryxInteractPromptComponent> InteractPromptComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Oryx|Vendor")
 	TArray<FOryxVendorStockSlot> Stock;

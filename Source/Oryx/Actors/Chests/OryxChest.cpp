@@ -2,6 +2,7 @@
 
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Component/InteractPrompt/OryxInteractPromptComponent.h"
 
 #include "Characters/Player/OryxCharacter.h"
 #include "Component/Currency/OryxCurrencyComponent.h"
@@ -22,6 +23,8 @@ AOryxChest::AOryxChest()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 	MeshComponent->SetupAttachment(RootComponent);
+
+	InteractPromptComponent = CreateDefaultSubobject<UOryxInteractPromptComponent>(TEXT("InteractPromptComponent"));
 }
 
 int32 AOryxChest::GetCost() const

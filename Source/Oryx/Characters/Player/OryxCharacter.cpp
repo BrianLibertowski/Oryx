@@ -22,6 +22,7 @@
 
 #include "Interfaces/OryxInteractable.h"
 #include "DrawDebugHelpers.h"
+#include "EngineUtils.h"
 
 AOryxCharacter::AOryxCharacter()
 {
@@ -147,6 +148,15 @@ void AOryxCharacter::Tick(float DeltaSeconds)
 		{
 			HealthComponent->ApplyHealing(HealthRate * DeltaSeconds);
 		}
+	}
+
+	// Interactable proximity poll — throttled to InteractScanInterval (default 10Hz).
+	// Picks closest IOryxInteractable in InteractRadius, broadcasts OnInteractableChanged when changed.
+	InteractScanAccumulator += DeltaSeconds;
+	if (InteractScanAccumulator >= InteractScanInterval)
+	{
+		InteractScanAccumulator = 0.f;
+		UpdateNearestInteractable();
 	}
 }
 
@@ -442,38 +452,52 @@ void AOryxCharacter::DoDash()
 
 void AOryxCharacter::DoInteract()
 {
+	// Proximity-based: act on whatever UpdateNearestInteractable last picked. No line trace,
+	// no facing requirement. If the player is close enough, F just works.
+	AActor* Target = CurrentInteractable.Get();
+	if (!IsValid(Target)) return;
+
+	if (Target->GetClass()->ImplementsInterface(UOryxInteractable::StaticClass()))
+	{
+		IOryxInteractable::Execute_Interact(Target, this);
+	}
+}
+
+void AOryxCharacter::UpdateNearestInteractable()
+{
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	// Trace forward from camera/eyes — feels more intuitive than from feet
-	const FVector TraceStart = GetActorLocation() + FVector(0.f, 0.f, 50.f);
-	const FVector TraceEnd = TraceStart + GetActorForwardVector() * InteractTraceDistance;
+	const FVector MyLoc = GetActorLocation();
+	const float RadiusSq = InteractRadius * InteractRadius;
 
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(OryxInteract), false, this);
+	AActor* Nearest = nullptr;
+	float NearestDistSq = TNumericLimits<float>::Max();
 
-	FHitResult Hit;
-	const bool bHit = World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params);
-
-#if WITH_EDITOR
-	DrawDebugLine(World, TraceStart, TraceEnd, bHit ? FColor::Green : FColor::Red, false, 1.5f, 0, 1.f);
-#endif
-
-	if (!bHit) return;
-
-	AActor* HitActor = Hit.GetActor();
-	if (!HitActor) return;
-
-	// Direct C++ interface implementer
-	if (IOryxInteractable* AsInteractable = Cast<IOryxInteractable>(HitActor))
+	// Demo-scale iteration: <~100 interactable actors per level. UE's TActorIterator is fast enough
+	// at 10Hz that this isn't worth a collision overlap query yet. Promote to OverlapMultiByObjectType
+	// if profiling shows hot spots once content density grows.
+	for (TActorIterator<AActor> It(World); It; ++It)
 	{
-		IOryxInteractable::Execute_Interact(HitActor, this);
-		return;
+		AActor* Actor = *It;
+		if (!IsValid(Actor)) continue;
+		if (!Actor->GetClass()->ImplementsInterface(UOryxInteractable::StaticClass())) continue;
+
+		const float DistSq = FVector::DistSquared(Actor->GetActorLocation(), MyLoc);
+		if (DistSq > RadiusSq) continue;
+
+		if (DistSq < NearestDistSq)
+		{
+			NearestDistSq = DistSq;
+			Nearest = Actor;
+		}
 	}
 
-	// Blueprint implementer
-	if (HitActor->GetClass()->ImplementsInterface(UOryxInteractable::StaticClass()))
+	AActor* Previous = CurrentInteractable.Get();
+	if (Nearest != Previous)
 	{
-		IOryxInteractable::Execute_Interact(HitActor, this);
+		CurrentInteractable = Nearest;
+		OnInteractableChanged.Broadcast(Nearest);
 	}
 }
 

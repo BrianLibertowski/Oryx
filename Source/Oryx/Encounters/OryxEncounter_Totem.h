@@ -6,6 +6,7 @@
 #include "OryxEncounter_Totem.generated.h"
 
 class UStaticMeshComponent;
+class UOryxInteractPromptComponent;
 
 UENUM(BlueprintType)
 enum class EOryxTotemDifficulty : uint8
@@ -61,4 +62,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshComponent;
+
+	/** Floating "F" prompt — auto shows/hides based on player proximity. Set PromptWidgetClass in BP. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UOryxInteractPromptComponent* InteractPromptComponent;
 };
