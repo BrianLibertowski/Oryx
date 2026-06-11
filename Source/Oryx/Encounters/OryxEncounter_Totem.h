@@ -35,7 +35,8 @@ public:
 	// IOryxInteractable
 	virtual void Interact_Implementation(AOryxCharacter* Interactor) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Oryx|Totem")
+	/** ExposeOnSpawn so spawner actors can set difficulty per-instance before BeginPlay's ConfigureForDifficulty runs. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Oryx|Totem", meta = (ExposeOnSpawn = "true"))
 	EOryxTotemDifficulty Difficulty = EOryxTotemDifficulty::Easy;
 
 	/** Enemy count per difficulty: [Easy, Medium, Hard]. Default 4/7/11. */
