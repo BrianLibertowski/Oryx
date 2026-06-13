@@ -150,6 +150,10 @@ public:
 
 	virtual void BeginPlay() override;
 
+	/** Rehydrates saved skill tree stat modifiers onto this pawn's fresh StatsComponent.
+	 *  PossessedBy = earliest point where PlayerState + pawn + StatsComponent are all valid. */
+	virtual void PossessedBy(AController* NewController) override;
+
 protected:
 
 	/** Initialize input action bindings */

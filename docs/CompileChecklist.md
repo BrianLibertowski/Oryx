@@ -1,5 +1,15 @@
 # Compile Checklist — 2026-05-26 First Pass
 
+> **2026-06-13 BATCH — FULL REBUILD REQUIRED (new modules + new translation units, NOT Live-Coding-safe):**
+> - `Oryx.Build.cs` gained **HTTP + Json** modules → regenerate project files + rebuild.
+> - New .cpp files (new translation units): `Systems/Interaction/OryxInteractableRegistry.cpp`,
+>   `Systems/BugReport/OryxBugReportSubsystem.cpp`, `Component/Stats/OryxStatFormatLibrary.cpp`.
+> - Header changes: OryxAbility.h (bIsSpell), OryxSkillTreeComponent.h (ReapplyAllocations +
+>   SpentPassive/AbilityPoints), OryxGameInstance.h (RegisteredSkillTrees), OryxCharacter.h (PossessedBy).
+> - Path: close editor → Generate VS Project Files → Build Solution → relaunch.
+> - **After rebuild:** add webhook URL to DefaultGame.ini for the bug reporter; add all skill tree
+>   DataAssets to BP_OryxGameInstance → Registered Skill Trees.
+>
 > **2026-05-26 STATUS:** P3+P4 batch ✅ COMPILED via Live Coding. Same-session follow-up wiring (XP grant on kill, OnPlayerLevelUp delegate, Boss/Player death → RunManager, OryxGameInstance save/load) **awaits a second compile pass**. See "Second compile (post-wiring batch)" section at bottom.
 
 ## Pre-compile sanity

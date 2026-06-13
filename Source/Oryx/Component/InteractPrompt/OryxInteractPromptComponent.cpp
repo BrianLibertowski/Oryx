@@ -2,6 +2,7 @@
 
 #include "Components/WidgetComponent.h"
 #include "Characters/Player/OryxCharacter.h"
+#include "Systems/Interaction/OryxInteractableRegistry.h"
 #include "EngineUtils.h"
 #include "TimerManager.h"
 
@@ -16,6 +17,13 @@ void UOryxInteractPromptComponent::BeginPlay()
 
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
+
+	// Register the owning interactable so AOryxCharacter's proximity poll finds it without
+	// iterating every actor in the world.
+	if (UOryxInteractableRegistry* Registry = UOryxInteractableRegistry::Get(this))
+	{
+		Registry->Register(Owner);
+	}
 
 	USceneComponent* OwnerRoot = Owner->GetRootComponent();
 	if (!OwnerRoot)
@@ -75,6 +83,14 @@ void UOryxInteractPromptComponent::HandleInteractableChanged(AActor* NewInteract
 
 void UOryxInteractPromptComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (AActor* Owner = GetOwner())
+	{
+		if (UOryxInteractableRegistry* Registry = UOryxInteractableRegistry::Get(this))
+		{
+			Registry->Unregister(Owner);
+		}
+	}
+
 	if (AOryxCharacter* Player = BoundPlayer.Get())
 	{
 		Player->OnInteractableChanged.RemoveDynamic(this, &UOryxInteractPromptComponent::HandleInteractableChanged);

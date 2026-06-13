@@ -25,7 +25,11 @@ These get sent to outsource artists once funded. Drafted ahead so the actual W10
 - **[Handoff_Environment.md](Handoff_Environment.md)** — Wild Plains map placement spec (spawn / 3 vendors / 3-5 chests / 20-30 totems / 2-3 outposts / 1-2 elite arenas / boss arena), navmesh / lighting / foliage / performance.
 
 ### Content Authoring References
-- **[SkillTree_Example_Warrior.md](SkillTree_Example_Warrior.md)** — D21 spec (5 trees per class, no separate passive). One tree fully spec'd (Cleave Mastery), other 4 skeleton'd. Refactored 2026-05-26 from old D14 (6 trees).
+- **[SkillTree_Warrior_Full.md](SkillTree_Warrior_Full.md)** — **LEAD skill tree doc (Rev 2, 2026-06-13).** Framework-compliance map + point economy + authoring workflow + Warrior content: class tree (24 nodes, Core/Offense/Defense/Utility) + 5 ability trees (Cleave Slash / Shield Rush / Earthshatter / War Cry / Execution Strike).
+- **[SkillTree_Archer_Full.md](SkillTree_Archer_Full.md)** — Archer: class tree (Marksmanship/Skirmisher/Survival/Utility) + Piercing Shot / Volley Rain / Dashstep / Poison Arrow / Falcon Mark. Subclasses: Ranger / Shadow Hunter.
+- **[SkillTree_Assassin_Full.md](SkillTree_Assassin_Full.md)** — Assassin: class tree (Agility/Deception/Lethality/Utility) + Shadow Strike / Smoke Veil / Backstab / Shadow Dash / Fan of Blades. Subclasses (3 per mockup): Blade Dancer / Shadowblade / Trickster.
+- **[SkillTree_Mage_Full.md](SkillTree_Mage_Full.md)** — Mage: class tree (Elemental/Arcane/Defense/Utility) + Arcane Bolt / Frost Nova / Fireball / Lightning Storm / Blink. Subclasses (3 per mockup): Sorcerer / Spellblade / Runemaster. ⚠️ CastSpeed needs a consumer (P5).
+- **[SkillTree_Example_Warrior.md](SkillTree_Example_Warrior.md)** — superseded for content; still useful for the in-editor authoring walk-through.
 - **[OnboardingHints.md](OnboardingHints.md)** — 17 first-30-second hints with exact text + trigger conditions. Implementation pattern + style guide.
 
 ### Gameplay Design Specs (added 2026-05-25)

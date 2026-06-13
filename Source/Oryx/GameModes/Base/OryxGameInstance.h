@@ -7,6 +7,7 @@
 
 class UOryxProfileSave;
 class AOryxPlayerState;
+class UOryxSkillTree;
 
 /**
  *  Game-instance owner of the profile save slot (UOryxProfileSave). Lifetime = process.
@@ -38,6 +39,16 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Oryx|Class Select")
 	TSubclassOf<APawn> SelectedPawnClass;
+
+	/**
+	 *  ALL skill tree DataAssets in the game, configured on BP_OryxGameInstance Class Defaults.
+	 *  Used by the save-load path to rehydrate stat modifiers from saved allocations:
+	 *  AOryxCharacter::PossessedBy → SkillTreeComponent::ReapplyAllocations(ActiveClass, this array).
+	 *  EVERY new UOryxSkillTree asset MUST be added here or its saved ranks restore as data-only
+	 *  (points spent visible, stat bonuses missing).
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Oryx|SkillTree")
+	TArray<TObjectPtr<UOryxSkillTree>> RegisteredSkillTrees;
 
 	/**
 	 *  The class the player just picked on WBP_CharacterSelection. Drives XP routing

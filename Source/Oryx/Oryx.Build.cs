@@ -20,7 +20,9 @@ public class Oryx : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+			"HTTP",
+			"Json"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

@@ -16,13 +16,17 @@
 #include "Component/StatusEffects/OryxStatusEffectsComponent.h"
 #include "States/Player/OryxPlayerState.h"
 #include "GameModes/RunManager/OryxRunManager.h"
+#include "GameModes/Base/OryxGameInstance.h"
+#include "Component/SkillTree/OryxSkillTreeComponent.h"
+#include "Component/Level/OryxLevelComponent.h"
+#include "Systems/SkillTree/OryxSkillTree.h"
 
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 
 #include "Interfaces/OryxInteractable.h"
+#include "Systems/Interaction/OryxInteractableRegistry.h"
 #include "DrawDebugHelpers.h"
-#include "EngineUtils.h"
 
 AOryxCharacter::AOryxCharacter()
 {
@@ -265,6 +269,33 @@ void AOryxCharacter::BeginPlay()
 	RefreshMovementSpeed();
 }
 
+void AOryxCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	// Rehydrate skill tree stat modifiers for the active class onto this pawn's StatsComponent.
+	// Runs on every possession (fresh run, future respawn) — the run-scope StatsComponent starts
+	// clean each time, so re-pushing is correct, never double-applied.
+	if (AOryxPlayerState* PS = GetPlayerState<AOryxPlayerState>())
+	{
+		UOryxSkillTreeComponent* SkillTree = PS->GetSkillTreeComponent();
+		UOryxLevelComponent* Level = PS->GetLevelComponent();
+		UOryxGameInstance* GI = Cast<UOryxGameInstance>(GetGameInstance());
+
+		if (SkillTree && Level && GI && GI->RegisteredSkillTrees.Num() > 0)
+		{
+			// TObjectPtr array → raw pointer array for the BlueprintCallable signature.
+			TArray<UOryxSkillTree*> Trees;
+			Trees.Reserve(GI->RegisteredSkillTrees.Num());
+			for (const TObjectPtr<UOryxSkillTree>& Tree : GI->RegisteredSkillTrees)
+			{
+				Trees.Add(Tree.Get());
+			}
+			SkillTree->ReapplyAllocations(Level->ActiveClass, Trees);
+		}
+	}
+}
+
 void AOryxCharacter::HandleStatsChanged()
 {
 	RefreshMovementSpeed();
@@ -465,32 +496,12 @@ void AOryxCharacter::DoInteract()
 
 void AOryxCharacter::UpdateNearestInteractable()
 {
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	const FVector MyLoc = GetActorLocation();
-	const float RadiusSq = InteractRadius * InteractRadius;
-
+	// Query the world registry — a pre-filtered list of interactables, so this is O(interactables)
+	// with no per-actor interface checks (vs the old O(all actors) TActorIterator scan).
 	AActor* Nearest = nullptr;
-	float NearestDistSq = TNumericLimits<float>::Max();
-
-	// Demo-scale iteration: <~100 interactable actors per level. UE's TActorIterator is fast enough
-	// at 10Hz that this isn't worth a collision overlap query yet. Promote to OverlapMultiByObjectType
-	// if profiling shows hot spots once content density grows.
-	for (TActorIterator<AActor> It(World); It; ++It)
+	if (UOryxInteractableRegistry* Registry = UOryxInteractableRegistry::Get(this))
 	{
-		AActor* Actor = *It;
-		if (!IsValid(Actor)) continue;
-		if (!Actor->GetClass()->ImplementsInterface(UOryxInteractable::StaticClass())) continue;
-
-		const float DistSq = FVector::DistSquared(Actor->GetActorLocation(), MyLoc);
-		if (DistSq > RadiusSq) continue;
-
-		if (DistSq < NearestDistSq)
-		{
-			NearestDistSq = DistSq;
-			Nearest = Actor;
-		}
+		Nearest = Registry->GetNearestInteractable(GetActorLocation(), InteractRadius);
 	}
 
 	AActor* Previous = CurrentInteractable.Get();

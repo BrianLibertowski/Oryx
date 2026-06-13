@@ -23,11 +23,17 @@ float UOryxAbility::GetEffectiveCooldown(const UOryxStatsComponent* Stats) const
 	const float CDR = Stats->GetStat(EOryxStat::CooldownReduction);
 	float Divisor = (1.f + CDR);
 
+	// Basic attacks scale with AttackSpeed; spells scale with CastSpeed. Both default to 1.0 in
+	// BaseStats, so multiplying through is safe. Basic-attack wins if somehow both flags are set.
 	if (bIsBasicAttack)
 	{
 		const float AS = Stats->GetStat(EOryxStat::AttackSpeed);
-		// AttackSpeed defaults to 1.0 in BaseStats — multiply through.
 		Divisor *= FMath::Max(KINDA_SMALL_NUMBER, AS);
+	}
+	else if (bIsSpell)
+	{
+		const float CastSpd = Stats->GetStat(EOryxStat::CastSpeed);
+		Divisor *= FMath::Max(KINDA_SMALL_NUMBER, CastSpd);
 	}
 
 	return Cooldown / FMath::Max(KINDA_SMALL_NUMBER, Divisor);

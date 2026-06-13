@@ -93,10 +93,10 @@ void UOryxGameInstance::ApplyProfileToPlayerState(AOryxPlayerState* PlayerState)
 		{
 			STC->SetAllocations(Pair.Key, Pair.Value);
 		}
-		// TODO: rehydrate the stat modifiers backing each allocated rank. Needs a Tree registry on
-		// the GameInstance (TArray<UOryxSkillTree*>) + ApplyAllocations(Tree) on SkillTreeComponent.
-		// Until then, opening the skill tree screen shows the points spent but the live stat boost
-		// won't reapply until the player explicitly re-invests. Tracked as Phase 4 follow-up.
+		// Stat-modifier rehydration happens later, at AOryxCharacter::PossessedBy →
+		// SkillTreeComponent::ReapplyAllocations(ActiveClass, GI->RegisteredSkillTrees).
+		// It can't happen here: at PlayerState BeginPlay the pawn isn't possessed yet, so the
+		// run-scope StatsComponent isn't reachable.
 	}
 }
 
