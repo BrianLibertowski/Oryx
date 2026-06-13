@@ -13,17 +13,20 @@ AOryxBoss::AOryxBoss()
 
 void AOryxBoss::BeginPlay()
 {
-	Super::BeginPlay();
-
-	ThresholdsFired.Init(false, HealthThresholds.Num());
-
+	// Bind death/damage handlers BEFORE Super::BeginPlay. Order matters: AOryxEnemy::BeginPlay
+	// (in Super) binds its own HandleDeath, which calls Destroy(). Multicast fires in bind order,
+	// and once the actor is pending-kill the engine SKIPS remaining self-bound listeners — so if
+	// HandleBossDied binds after the base handler, it never runs and the RunManager never hears
+	// about the boss death. Binding first guarantees we notify before the destroy.
 	if (UOryxHealthComponent* HC = FindComponentByClass<UOryxHealthComponent>())
 	{
 		HC->OnDamaged.AddDynamic(this, &AOryxBoss::HandleBossDamaged);
-		// Note: Super (AOryxEnemy) also binds its own HandleDeath for the cleanup/loot path.
-		// Boss-specific RunManager notification rides alongside it.
 		HC->OnDeath.AddDynamic(this, &AOryxBoss::HandleBossDied);
 	}
+
+	Super::BeginPlay();
+
+	ThresholdsFired.Init(false, HealthThresholds.Num());
 }
 
 void AOryxBoss::HandleBossDied(AActor* /*DeadActor*/)
