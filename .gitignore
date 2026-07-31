@@ -1,9 +1,11 @@
 Binaries
+Build
 DerivedDataCache
 Intermediate
 Saved
 .vscode
 .vs
+.idea
 *.VC.db
 *.opensdf
 *.opendb
@@ -12,3 +14,12 @@ Saved
 *.suo
 *.xcodeproj
 *.xcworkspace
+
+# External tool sidecars (claude-flow / RuFlo / etc.) — never commit
+.claude-flow/
+.swarm/
+ruvector.db
+.mcp.json
+
+# Stale template CLAUDE.md dropped by other tools
+CLAUDE.md
